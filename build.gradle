@@ -13,4 +13,5 @@ dependencies {
   compile group: 'com.github.kohanyirobert', name: 'ebson', version: '0.4-SNAPSHOT'
 
   testCompile 'junit:junit:4.12'
+  testCompile 'org.assertj:assertj-core:3.6.2'
 }
