@@ -1,5 +1,8 @@
 package com.zoyi.logstasher.output.tcp;
 
+import com.zoyi.logstasher.Logstashers;
+import com.zoyi.logstasher.util.annotation.Name;
+import com.zoyi.logstasher.util.annotation.Stasher;
 import com.zoyi.logstasher.configuration.Configuration;
 import com.zoyi.logstasher.Logstasher;
 import com.zoyi.logstasher.message.BsonMessage;
@@ -15,6 +18,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -22,6 +26,7 @@ import java.util.concurrent.atomic.AtomicReference;
 /**
  * Created by lloyd on 2017-04-04
  */
+@Stasher(name = Name.TCP)
 public class TcpLogstasherImpl implements Logstasher {
   private final AtomicReference<NetSocket> socketRef = new AtomicReference<>();
 
@@ -40,9 +45,12 @@ public class TcpLogstasherImpl implements Logstasher {
 
   @Override
   public void initialize(Configuration configuration) {
+    if (Objects.isNull(configuration))
+      configuration = Logstashers.newConfiguration();
+
     if (!this.initialized) {
       this.configuration = configuration;
-      this.popSize = 10;
+      this.popSize = configuration.getInteger("popSize", 10);
       this.initialized = true;
     }
   }
@@ -68,20 +76,26 @@ public class TcpLogstasherImpl implements Logstasher {
         try {
           final Future<NetSocket> result = notifier.submit(() -> {
             final NetClientOptions options = new NetClientOptions();
-            options.setConnectTimeout(5000);
-            options.setReconnectAttempts(3);
+            options.setConnectTimeout(
+              configuration.getInteger("connectionTimeout", 5000)
+            );
+            options.setReconnectAttempts(
+              configuration.getInteger("reconnectAttempts", 3)
+            );
 
             final AtomicReference<NetSocket> innerRef = new AtomicReference<>();
 
             Vertx.vertx()
                  .createNetClient(options)
-                 .connect(12340, "localhost", connectionResult -> {
-                   if (connectionResult.succeeded()) {
-                     innerRef.set(connectionResult.result());
-                   } else {
-                     throw new RuntimeException(connectionResult.cause());
-                   }
-                 });
+                 .connect(configuration.getInteger("port", 12340),
+                          configuration.getString("host", "localhost"),
+                          connectionResult -> {
+                            if (connectionResult.succeeded()) {
+                              innerRef.set(connectionResult.result());
+                            } else {
+                              throw new RuntimeException(connectionResult.cause());
+                            }
+                          });
 
             while (innerRef.get() == null) {
               /* await */
@@ -135,7 +149,10 @@ public class TcpLogstasherImpl implements Logstasher {
     if (checkSocketConnection()) {
       final List<Message> messages =
           BsonMessageQueue.getInstance()
-                          .pop(BsonMessage.TYPE, popSize, 20);
+                          .pop(BsonMessage.TYPE,
+                               popSize,
+                               configuration.getInteger("maxTraverses", 20)
+                          );
 
       System.out.println("Messages to be written: " + messages.size());
 
