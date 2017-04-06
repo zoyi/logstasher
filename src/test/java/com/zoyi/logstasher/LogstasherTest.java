@@ -8,7 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Created by lou on 2017-04-05 12:36
  */
-public class LogStasherTest {
+public class LogstasherTest {
   @Test
   public void shouldBeLogStasherNotNull() {
     Logstasher logstasher = Logstashers.newLogstasher(Name.TCP.getName());

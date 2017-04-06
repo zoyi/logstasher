@@ -11,10 +11,19 @@ import java.time.LocalDateTime;
 public class MockServer {
   public static void main(String[] args) {
     MockServer mockServer = new MockServer(12340);
+    mockServer.start();
   }
 
 
+  private final int port;
+
+
   public MockServer(int port) {
+    this.port = port;
+  }
+
+
+  public void start() {
     Vertx.vertx()
          .createNetServer()
          .connectHandler(socket -> {

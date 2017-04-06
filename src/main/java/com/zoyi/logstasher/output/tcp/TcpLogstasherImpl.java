@@ -1,14 +1,15 @@
 package com.zoyi.logstasher.output.tcp;
 
+import com.zoyi.logstasher.Logstasher;
 import com.zoyi.logstasher.Logstashers;
+import com.zoyi.logstasher.configuration.Configuration;
+import com.zoyi.logstasher.configuration.ConfigurationImpl;
+import com.zoyi.logstasher.message.JsonMessage;
+import com.zoyi.logstasher.message.Message;
+import com.zoyi.logstasher.queue.BaseMessageQueue;
+import com.zoyi.logstasher.queue.MessageQueue;
 import com.zoyi.logstasher.util.annotation.Name;
 import com.zoyi.logstasher.util.annotation.Stasher;
-import com.zoyi.logstasher.configuration.Configuration;
-import com.zoyi.logstasher.Logstasher;
-import com.zoyi.logstasher.message.BsonMessage;
-import com.zoyi.logstasher.message.Message;
-import com.zoyi.logstasher.queue.BsonMessageQueue;
-import com.zoyi.logstasher.queue.MessageQueue;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.net.NetClientOptions;
@@ -19,7 +20,10 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 
@@ -28,6 +32,8 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 @Stasher(name = Name.TCP)
 public class TcpLogstasherImpl implements Logstasher {
+  private static final String KEEP_ALIVE_MESSAGE = System.getProperty("line.separator");
+
   private final AtomicReference<NetSocket> socketRef = new AtomicReference<>();
 
   private Configuration configuration;
@@ -39,12 +45,22 @@ public class TcpLogstasherImpl implements Logstasher {
 
   @Override
   public void initialize() {
-    this.initialize(null);
+    final Configuration configuration = new ConfigurationImpl();
+    configuration.put("popSize", 10);
+    configuration.put("connectionTimeout", 5000);
+    configuration.put("reconnectAttempts", 3);
+    configuration.put("host", "localhost");
+    configuration.put("port", 12340);
+    configuration.put("maxTraverses", 20);
+
+    this.initialize(configuration);
   }
 
 
   @Override
   public void initialize(Configuration configuration) {
+    // TODO: merge base configuration and new configuration
+
     if (Objects.isNull(configuration))
       configuration = Logstashers.newConfiguration();
 
@@ -126,18 +142,23 @@ public class TcpLogstasherImpl implements Logstasher {
   @Override
   public void put(Map<String, Object> data) {
     if (checkSocketConnection()) {
-      final MessageQueue queue = BsonMessageQueue.create(2, 1024);
-      queue.put(new BsonMessage(data));
+      final MessageQueue queue = BaseMessageQueue.create(1024, 2048);
+      queue.put(new JsonMessage(data));
 
       // Flush messages
-      if (queue.isExceeded() ||
-          lastPushedTimestamp != null &&
-          Duration.between(lastPushedTimestamp, Instant.now())
-                  .toMillis() > 1000) {
-        push();
-      }
+      try {
+        if (queue.isExceeded() ||
+            lastPushedTimestamp != null &&
+                Duration.between(lastPushedTimestamp, Instant.now())
+                        .toMillis() > 1000) {
+          push();
+        }
 
-      lastPushedTimestamp = Instant.now();
+        lastPushedTimestamp = Instant.now();
+
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
 
     } else {
       throw new RuntimeException("Socket connection failed");
@@ -145,11 +166,11 @@ public class TcpLogstasherImpl implements Logstasher {
   }
 
 
-  private void push() {
+  private void push() throws Exception {
     if (checkSocketConnection()) {
       final List<Message> messages =
-          BsonMessageQueue.getInstance()
-                          .pop(BsonMessage.TYPE,
+          BaseMessageQueue.getInstance()
+                          .pop(JsonMessage.TYPE,
                                popSize,
                                configuration.getInteger("maxTraverses", 20)
                           );
@@ -157,8 +178,11 @@ public class TcpLogstasherImpl implements Logstasher {
       System.out.println("Messages to be written: " + messages.size());
 
       for (Message message : messages) {
-        final BsonMessage bsonMessage = (BsonMessage) message;
-        socketRef.get().write(Buffer.buffer(bsonMessage.encode()));
+        final JsonMessage jsonMessage = (JsonMessage) message;
+        socketRef.get().write(Buffer.buffer(jsonMessage.encode()));
+        socketRef.get().write("\n");
+
+        System.out.println("Write");
       }
 
       lastPushedTimestamp = Instant.now();

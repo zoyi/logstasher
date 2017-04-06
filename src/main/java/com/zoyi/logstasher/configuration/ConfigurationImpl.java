@@ -11,8 +11,12 @@ import java.util.Set;
 /**
  * Created by lou on 2017-04-05 15:04
  */
-public class ConfigurationImpl implements Configuration<String, Tuple> {
+public class ConfigurationImpl implements Configuration {
   private final Map<String, Tuple> conf = new HashMap<>();
+
+
+  public ConfigurationImpl() {}
+
 
   @Override
   public Boolean getBoolean(final String key, final Boolean defaultValue) {
@@ -204,7 +208,7 @@ public class ConfigurationImpl implements Configuration<String, Tuple> {
   }
 
 
-  private <V> Configuration<String, Tuple> put0(final String key, final V v) {
+  private <V> Configuration put0(final String key, final V v) {
     conf.put(key, Tuple.mkTuple(v));
 
     return this;

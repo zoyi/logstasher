@@ -1,6 +1,5 @@
 package com.zoyi.logstasher.queue;
 
-import com.zoyi.logstasher.message.BsonMessage;
 import com.zoyi.logstasher.message.Message;
 
 import java.util.LinkedList;
@@ -12,18 +11,18 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Created by lloyd on 2017-04-04
  */
-public class BsonMessageQueue implements MessageQueue {
+public class BaseMessageQueue implements MessageQueue {
   public static int DEFAULT_CAPACITY_LIMIT = Integer.MAX_VALUE;
   public static int DEFAULT_SIZE_LIMIT = Integer.MAX_VALUE;
 
 
   public static MessageQueue create(int capacity, int size) {
     if (instance == null) {
-      synchronized (BsonMessageQueue.class) {
+      synchronized (BaseMessageQueue.class) {
         if (instance == null) {
           // TODO: use default value when arguments are negative number
 
-          instance = new BsonMessageQueue((int)(capacity * 1.1), (int)(size * 1.1));
+          instance = new BaseMessageQueue((int)(capacity * 1.1), (int)(size * 1.1));
         }
       }
     }
@@ -37,7 +36,7 @@ public class BsonMessageQueue implements MessageQueue {
   }
 
 
-  private static BsonMessageQueue instance;
+  private static BaseMessageQueue instance;
 
   private final int capacityLimit;
   private final int sizeLimit;
@@ -45,7 +44,7 @@ public class BsonMessageQueue implements MessageQueue {
   private final AtomicInteger currentByteSize = new AtomicInteger();
 
 
-  private BsonMessageQueue(int capacityLimit, int sizeLimit) {
+  private BaseMessageQueue(int capacityLimit, int sizeLimit) {
     this.capacityLimit = capacityLimit;
     this.sizeLimit = sizeLimit;
   }
@@ -55,7 +54,7 @@ public class BsonMessageQueue implements MessageQueue {
   public void put(Message<?> message) {
     synchronized (qInternal) {
       qInternal.add(message);
-      currentByteSize.addAndGet(message.byteLength());
+      currentByteSize.addAndGet(message.getByteLength());
     }
   }
 
@@ -69,8 +68,9 @@ public class BsonMessageQueue implements MessageQueue {
       int traverse = 0;
 
       while ((msg=qInternal.peek()) != null
-          && traverse <= maxTraverses) {
-        if (msg.getType().equals(BsonMessage.TYPE)) {
+          && traverse <= maxTraverses
+          && result.size() < count) {
+        if (msg.getType().equals(type)) {
           result.add(qInternal.poll());
         }
         traverse++;

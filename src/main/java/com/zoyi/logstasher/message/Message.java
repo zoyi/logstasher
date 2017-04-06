@@ -5,6 +5,6 @@ package com.zoyi.logstasher.message;
  */
 public interface Message<T> {
   String getType();
-  int byteLength();
-  T encode();
+  int getByteLength();
+  T encode() throws Exception;
 }

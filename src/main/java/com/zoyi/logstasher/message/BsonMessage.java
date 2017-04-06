@@ -34,7 +34,7 @@ public class BsonMessage implements Message<byte[]> {
 
 
   @Override
-  public int byteLength() {
+  public int getByteLength() {
     return BsonDocuments.binarySize(this.document);
   }
 
@@ -42,7 +42,7 @@ public class BsonMessage implements Message<byte[]> {
   @Override
   public byte[] encode() {
     final ByteBuffer buffer =
-        ByteBuffer.allocate(byteLength())
+        ByteBuffer.allocate(getByteLength())
                   .order(ByteOrder.LITTLE_ENDIAN);
 
     BsonDocuments.writeTo(buffer, (BsonDocument) this.document.get("body"));

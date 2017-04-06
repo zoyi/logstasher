@@ -11,9 +11,7 @@ import java.util.Map;
 public interface Logstasher extends AutoCloseable {
   /**
    * Simple form of {@link #initialize(Configuration)} method.
-   * Initializes Logstasher object with default configuration.
-   *
-   * @apiNote It calls {@link #initialize(Configuration)} method with {@code null} parameter
+   * Initializes Logstasher object with configuration that made by property file.
    */
   void initialize();
 
