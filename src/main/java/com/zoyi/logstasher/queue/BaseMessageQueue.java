@@ -61,6 +61,11 @@ public class BaseMessageQueue implements MessageQueue {
 
   @Override
   public List<Message> pop(String type, int count, int maxTraverses) {
+    // Count might be bigger than zero
+    count = Math.max(count, 1);
+    // MaxTraverses might be equal or bigger than count
+    maxTraverses = Math.max(maxTraverses, count);
+
     final List<Message> result = new LinkedList<>();
 
     synchronized (qInternal) {

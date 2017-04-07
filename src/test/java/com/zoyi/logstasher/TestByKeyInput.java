@@ -17,36 +17,38 @@ public class TestByKeyInput {
     final Logstasher logstasher = new TcpLogstasherImpl();
 
     final Configuration configuration = new ConfigurationImpl();
-    configuration.put("popSize", 3);
+    configuration.put("popSize", 10);
+    configuration.put("maxTraverses", 20);
     configuration.put("connectionTimeout", 1000);
     configuration.put("reconnectAttempts", 1);
     configuration.put("host", "localhost");
     configuration.put("port", 12340);
-    configuration.put("maxTraverses", 2);
 
     // localhost:12340
     logstasher.initialize(configuration);
 
-
     final Scanner scanner = new Scanner(System.in);
     String line;
 
-    // foo:bar, hello:world, name:lloyd
-    // number:1, orange:juice
-    // zoyi:corporation
     while ((line=scanner.nextLine()) != null) {
-      final Map<String, Object> data = new HashMap<>();
-      data.put("@default", "default value");
+      if (!line.isEmpty()) {
+        final Map<String, Object> data = new HashMap<>();
+        data.put("@default", "default value");
 
-      try {
-        final String[] tokens = line.split(",\\s*");
-        for (String t : tokens) {
-          final String[] tk = t.split(":");
-          data.put(tk[0], tk[1]);
+        try {
+          final String[] tokens = line.split(",\\s*");
+          for (String t : tokens) {
+            final String[] tk = t.split(":");
+            data.put(tk[0], tk[1]);
+          }
+        } catch (Exception e) {}
+
+        try {
+          logstasher.put(data);
+        } catch (Exception e) {
+          e.printStackTrace();
         }
-      } catch (Exception e) {}
-
-      logstasher.put(data);
+      }
     }
   }
 }

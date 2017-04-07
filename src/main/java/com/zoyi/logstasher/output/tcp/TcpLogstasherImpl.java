@@ -24,7 +24,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 
 /**
@@ -32,14 +34,16 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 @Stasher(name = Name.TCP)
 public class TcpLogstasherImpl implements Logstasher {
-  private static final String KEEP_ALIVE_MESSAGE = System.getProperty("line.separator");
-
   private final AtomicReference<NetSocket> socketRef = new AtomicReference<>();
+  private Consumer<Void> onSocketConnectionClosedCallback;
 
+  // Configuration
   private Configuration configuration;
-  private boolean initialized;
   private int popSize;
 
+  // Status
+  private boolean initialized;
+  private final AtomicBoolean tryingToConnect = new AtomicBoolean();
   private Instant lastPushedTimestamp;
 
 
@@ -84,53 +88,75 @@ public class TcpLogstasherImpl implements Logstasher {
   }
 
 
+  public Logstasher setOnSocketConnectionClosedCallback(Consumer<Void> c) {
+    this.onSocketConnectionClosedCallback = c;
+    return this;
+  }
+
+
   private boolean checkSocketConnection() {
     synchronized (socketRef) {
-      if (this.socketRef.get() == null) {
+      if (!this.tryingToConnect.get() && this.socketRef.get() == null) {
+        tryingToConnect.set(true);
         final ExecutorService notifier = Executors.newSingleThreadExecutor();
 
         try {
           final Future<NetSocket> result = notifier.submit(() -> {
+            final String host = configuration.getString("host", "localhost");
+            final int port = configuration.getInteger("port", 12340);
+            final int connectionTimeout = configuration.getInteger("connectionTimeout", 5000);
+            final int reconnectAttempts = configuration.getInteger("reconnectAttempts", 3);
+
             final NetClientOptions options = new NetClientOptions();
-            options.setConnectTimeout(
-              configuration.getInteger("connectionTimeout", 5000)
-            );
-            options.setReconnectAttempts(
-              configuration.getInteger("reconnectAttempts", 3)
-            );
+            options.setConnectTimeout(connectionTimeout);
+            options.setReconnectAttempts(reconnectAttempts);
 
             final AtomicReference<NetSocket> innerRef = new AtomicReference<>();
+            final AtomicBoolean connecting = new AtomicBoolean(true);
 
             Vertx.vertx()
                  .createNetClient(options)
-                 .connect(configuration.getInteger("port", 12340),
-                          configuration.getString("host", "localhost"),
-                          connectionResult -> {
-                            if (connectionResult.succeeded()) {
-                              innerRef.set(connectionResult.result());
-                            } else {
-                              throw new RuntimeException(connectionResult.cause());
-                            }
-                          });
+                 .connect(port, host, connectionResult -> {
+                   if (connectionResult.succeeded()) {
+                     final NetSocket socket = connectionResult.result();
+                     socket.closeHandler(_void -> {
+                       // Remove reference to socket
+                       synchronized (socketRef) {
+                         socketRef.set(null);
+                         if (onSocketConnectionClosedCallback != null)
+                           onSocketConnectionClosedCallback.accept(null);
+                       }
+                     });
+                     innerRef.set(socket);
+                     connecting.set(false);
+                   } else {
+                     connecting.set(false);
+                     throw new RuntimeException(connectionResult.cause());
+                   }
+                 });
 
-            while (innerRef.get() == null) {
+            while (connecting.get() && innerRef.get() == null) {
               /* await */
               Thread.sleep(100);
             }
+
             return innerRef.get();
           });
 
-          // Set reference
-          return this.socketRef.compareAndSet(
+          // Set new reference
+          this.socketRef.compareAndSet(
               null,
               result.get(5000 * 3, TimeUnit.MILLISECONDS)
           );
+
+          return socketRef.get() != null;
 
         } catch (Exception e) {
           return false;
 
         } finally {
           notifier.shutdownNow();
+          tryingToConnect.set(false);
         }
       }
     }
@@ -161,6 +187,7 @@ public class TcpLogstasherImpl implements Logstasher {
       }
 
     } else {
+      // TODO: Create putExceptionCallback
       throw new RuntimeException("Socket connection failed");
     }
   }
@@ -188,6 +215,9 @@ public class TcpLogstasherImpl implements Logstasher {
       lastPushedTimestamp = Instant.now();
 
       System.out.println("Pushed");
+
+    } else {
+      // TODO: Create pushExceptionCallback
     }
   }
 }
