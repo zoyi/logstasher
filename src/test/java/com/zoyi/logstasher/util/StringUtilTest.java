@@ -2,17 +2,15 @@ package com.zoyi.logstasher.util;
 
 import org.junit.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
-/**
- * Created by lou on 2017-04-05 14:57
- */
 public class StringUtilTest {
   @Test
   public void shouldNotNullWhenNotNull() {
     final String str = "notnull";
 
-    assertThat(StringUtil.isNotNullOrEmpty(str)).isTrue();
+    assertTrue(StringUtil.isNotNullOrEmpty(str));
   }
 
 
@@ -20,7 +18,7 @@ public class StringUtilTest {
   public void shouldBeFalseWhenIsEmpty() {
     final String str = "";
 
-    assertThat(StringUtil.isNotNullOrEmpty(str)).isFalse();
+    assertFalse(StringUtil.isNotNullOrEmpty(str));
   }
 
 
@@ -28,7 +26,7 @@ public class StringUtilTest {
   public void shouldBeFalseWhenNull() {
     final String str = null;
 
-    assertThat(StringUtil.isNotNullOrEmpty(str)).isFalse();
+    assertFalse(StringUtil.isNotNullOrEmpty(str));
   }
 
 
@@ -36,7 +34,7 @@ public class StringUtilTest {
   public void shouldBeTrueWhenEmpty() {
     final String str = "";
 
-    assertThat(StringUtil.isNullOrEmpty(str)).isTrue();
+    assertTrue(StringUtil.isNullOrEmpty(str));
   }
 
 
@@ -44,6 +42,6 @@ public class StringUtilTest {
   public void shouldBeTrueWhenNull() {
     final String str = null;
 
-    assertThat(StringUtil.isNullOrEmpty(str)).isTrue();
+    assertTrue(StringUtil.isNullOrEmpty(str));
   }
 }

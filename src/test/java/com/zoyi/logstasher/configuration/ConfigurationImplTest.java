@@ -2,11 +2,14 @@ package com.zoyi.logstasher.configuration;
 
 import org.junit.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import java.util.Objects;
 
-/**
- * Created by lou on 2017-04-05 16:06
- */
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 public class ConfigurationImplTest {
   @Test
   public void shouldTwoConfigurationMerged() {
@@ -28,11 +31,11 @@ public class ConfigurationImplTest {
 
     currentConf.merge(newConf);
 
-    assertThat(currentConf).isNotEmpty();
-    assertThat(currentConf.size()).isEqualTo(3);
-    assertThat(currentConf.getString(key1)).isEqualTo(value1);
-    assertThat(currentConf.getInteger(key2)).isEqualTo(newValue2);
-    assertThat(currentConf.getString(key3)).isEqualTo(newValue3);
+    assertFalse(currentConf.isEmpty());
+    assertEquals(currentConf.size(), 3);
+    assertEquals(currentConf.getString(key1), value1);
+    assertEquals(currentConf.getInteger(key2), newValue2);
+    assertEquals(currentConf.getString(key3), newValue3);
   }
 
 
@@ -42,13 +45,13 @@ public class ConfigurationImplTest {
     final String key = "boolean";
     final Boolean value = true;
 
-    assertThat(conf).isEmpty();
-    assertThat(conf.getBoolean(key)).isNull();
+    assertTrue(conf.isEmpty());
+    assertTrue(Objects.isNull(conf.getBoolean(key)));
 
     conf.put(key, value);
 
-    assertThat(conf).isNotEmpty();
-    assertThat(conf.getBoolean(key)).isEqualTo(value);
+    assertFalse(conf.isEmpty());
+    assertEquals(conf.getBoolean(key), value);
   }
 
 
@@ -59,13 +62,13 @@ public class ConfigurationImplTest {
     final Integer number = 100;
     final Byte value = Byte.valueOf(number.toString(), 2);
 
-    assertThat(conf).isEmpty();
-    assertThat(conf.getByte(key)).isNull();
+    assertTrue(conf.isEmpty());
+    assertNull(conf.getByte(key));
 
     conf.put(key, value);
 
-    assertThat(conf).isNotEmpty();
-    assertThat(conf.getByte(key)).isEqualTo(value);
+    assertFalse(conf.isEmpty());
+    assertEquals(conf.getByte(key), value);
   }
 
 
@@ -75,13 +78,13 @@ public class ConfigurationImplTest {
     final String key = "character";
     final Character value = 'c';
 
-    assertThat(conf).isEmpty();
-    assertThat(conf.getCharacter(key)).isNull();
+    assertTrue(conf.isEmpty());
+    assertNull(conf.getCharacter(key));
 
     conf.put(key, value);
 
-    assertThat(conf).isNotEmpty();
-    assertThat(conf.getCharacter(key)).isEqualTo(value);
+    assertFalse(conf.isEmpty());
+    assertEquals(conf.getCharacter(key), value);
   }
 
 
@@ -91,13 +94,13 @@ public class ConfigurationImplTest {
     final String key = "short";
     final Short value = 127;
 
-    assertThat(conf).isEmpty();
-    assertThat(conf.getShort(key)).isNull();
+    assertTrue(conf.isEmpty());
+    assertNull(conf.getShort(key));
 
     conf.put(key, value);
 
-    assertThat(conf).isNotEmpty();
-    assertThat(conf.getShort(key)).isEqualTo(value);
+    assertFalse(conf.isEmpty());
+    assertEquals(conf.getShort(key), value);
   }
 
 
@@ -107,13 +110,13 @@ public class ConfigurationImplTest {
     final String key = "float";
     final Float value = 0.534f;
 
-    assertThat(conf).isEmpty();
-    assertThat(conf.getFloat(key)).isNull();
+    assertTrue(conf.isEmpty());
+    assertNull(conf.getFloat(key));
 
     conf.put(key, value);
 
-    assertThat(conf).isNotEmpty();
-    assertThat(conf.getFloat(key)).isEqualTo(value);
+    assertFalse(conf.isEmpty());
+    assertEquals(conf.getFloat(key), value);
   }
 
 
@@ -123,13 +126,13 @@ public class ConfigurationImplTest {
     final String key = "integer";
     final Integer value = 234234;
 
-    assertThat(conf).isEmpty();
-    assertThat(conf.getInteger(key)).isNull();
+    assertTrue(conf.isEmpty());
+    assertNull(conf.getInteger(key));
 
     conf.put(key, value);
 
-    assertThat(conf).isNotEmpty();
-    assertThat(conf.getInteger(key)).isEqualTo(value);
+    assertFalse(conf.isEmpty());
+    assertEquals(conf.getInteger(key), value);
   }
 
 
@@ -139,13 +142,13 @@ public class ConfigurationImplTest {
     final String key = "long";
     final Long value = 5342342L;
 
-    assertThat(conf).isEmpty();
-    assertThat(conf.getLong(key)).isNull();
+    assertTrue(conf.isEmpty());
+    assertNull(conf.getLong(key));
 
     conf.put(key, value);
 
-    assertThat(conf).isNotEmpty();
-    assertThat(conf.getLong(key)).isEqualTo(value);
+    assertFalse(conf.isEmpty());
+    assertEquals(conf.getLong(key), value);
   }
 
 
@@ -155,13 +158,13 @@ public class ConfigurationImplTest {
     final String key = "double";
     final Double value = 0.3523423d;
 
-    assertThat(conf).isEmpty();
-    assertThat(conf.getDouble(key)).isNull();
+    assertTrue(conf.isEmpty());
+    assertNull(conf.getDouble(key));
 
     conf.put(key, value);
 
-    assertThat(conf).isNotEmpty();
-    assertThat(conf.getDouble(key)).isEqualTo(value);
+    assertFalse(conf.isEmpty());
+    assertEquals(conf.getDouble(key), value);
   }
 
 
@@ -171,13 +174,13 @@ public class ConfigurationImplTest {
     final String key = "string";
     final String value = "string value";
 
-    assertThat(conf).isEmpty();
-    assertThat(conf.getString(key)).isNull();
+    assertTrue(conf.isEmpty());
+    assertNull(conf.getString(key));
 
     conf.put(key, value);
 
-    assertThat(conf).isNotEmpty();
-    assertThat(conf.getString(key)).isEqualTo(value);
+    assertFalse(conf.isEmpty());
+    assertEquals(conf.getString(key), value);
   }
 
 
@@ -189,9 +192,9 @@ public class ConfigurationImplTest {
     final Integer defaultValue2 = 55;
     final Long defaultValue3 = 34234L;
 
-    assertThat(conf.getString("foo", defaultValue1)).isEqualTo(defaultValue1);
-    assertThat(conf.getInteger("bar", defaultValue2)).isEqualTo(defaultValue2);
-    assertThat(conf.getLong("hello world", defaultValue3)).isEqualTo(defaultValue3);
+    assertEquals(conf.getString("foo", defaultValue1), defaultValue1);
+    assertEquals(conf.getInteger("bar", defaultValue2), defaultValue2);
+    assertEquals(conf.getLong("hello world", defaultValue3), defaultValue3);
   }
 
 
@@ -203,8 +206,8 @@ public class ConfigurationImplTest {
 
     final Boolean result = conf.getBoolean(key, false);
 
-    assertThat(result).isNotNull();
-    assertThat(result).isTrue();
+    assertNotNull(result);
+    assertTrue(result);
   }
 
 
@@ -219,8 +222,8 @@ public class ConfigurationImplTest {
 
     final Byte result = conf.getByte(key, null);
 
-    assertThat(result).isNotNull();
-    assertThat(result).isEqualTo(value);
+    assertNotNull(result);
+    assertEquals(result, value);
   }
 
 
@@ -234,8 +237,8 @@ public class ConfigurationImplTest {
 
     final Character result = conf.getCharacter(key, null);
 
-    assertThat(result).isNotNull();
-    assertThat(result).isEqualTo(value);
+    assertNotNull(result);
+    assertEquals(result, value);
   }
 
 
@@ -249,8 +252,8 @@ public class ConfigurationImplTest {
 
     final Short result = conf.getShort(key, null);
 
-    assertThat(result).isNotNull();
-    assertThat(result).isEqualTo(value);
+    assertNotNull(result);
+    assertEquals(result, value);
   }
 
 
@@ -264,8 +267,8 @@ public class ConfigurationImplTest {
 
     final Float result = conf.getFloat(key, null);
 
-    assertThat(result).isNotNull();
-    assertThat(result).isEqualTo(value);
+    assertNotNull(result);
+    assertEquals(result, value);
   }
 
 
@@ -279,8 +282,8 @@ public class ConfigurationImplTest {
 
     final Integer result = conf.getInteger(key, null);
 
-    assertThat(result).isNotNull();
-    assertThat(result).isEqualTo(value);
+    assertNotNull(result);
+    assertEquals(result, value);
   }
 
 
@@ -294,8 +297,8 @@ public class ConfigurationImplTest {
 
     final Long result = conf.getLong(key, null);
 
-    assertThat(result).isNotNull();
-    assertThat(result).isEqualTo(value);
+    assertNotNull(result);
+    assertEquals(result, value);
   }
 
   @Test
@@ -308,8 +311,8 @@ public class ConfigurationImplTest {
 
     final Double result = conf.getDouble(key, null);
 
-    assertThat(result).isNotNull();
-    assertThat(result).isEqualTo(value);
+    assertNotNull(result);
+    assertEquals(result, value);
   }
 
 
@@ -323,8 +326,8 @@ public class ConfigurationImplTest {
 
     final String result = conf.getString(key, null);
 
-    assertThat(result).isNotNull();
-    assertThat(result).isEqualTo(value);
+    assertNotNull(result);
+    assertEquals(result, value);
   }
 
   @Test
@@ -347,12 +350,12 @@ public class ConfigurationImplTest {
 
     conf.putAll(configuration);
 
-    assertThat(conf).isNotEmpty();
-    assertThat(conf.getString(key1, null)).isEqualTo(value1);
-    assertThat(conf.getDouble(key2, null)).isEqualTo(value2);
-    assertThat(conf.getLong(key3, null)).isEqualTo(value3);
-    assertThat(conf.getInteger(key4, null)).isEqualTo(value4);
-    assertThat(conf.getCharacter(key5, null)).isEqualTo(value5);
+    assertFalse(conf.isEmpty());
+    assertEquals(conf.getString(key1, null), value1);
+    assertEquals(conf.getDouble(key2, null), value2);
+    assertEquals(conf.getLong(key3, null), value3);
+    assertEquals(conf.getInteger(key4, null), value4);
+    assertEquals(conf.getCharacter(key5, null), value5);
   }
 
 
