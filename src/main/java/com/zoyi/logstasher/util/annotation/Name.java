@@ -1,7 +1,8 @@
 package com.zoyi.logstasher.util.annotation;
 
 /**
- * Created by lou on 2017-04-05 14:55
+ * @author Loustler(Dongyeon Lee)
+ * @since 2017-04-05
  */
 public enum Name {
   EMPTY(""),

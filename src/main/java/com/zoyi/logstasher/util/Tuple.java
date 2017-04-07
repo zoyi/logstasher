@@ -1,7 +1,8 @@
 package com.zoyi.logstasher.util;
 
 /**
- * Created by lou on 2017-04-05 15:09
+ * @author Loustler(Dongyeon Lee)
+ * @since 2017-04-05
  */
 public class Tuple <V> {
   final V value;

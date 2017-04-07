@@ -7,7 +7,8 @@ import java.util.Objects;
 
 
 /**
- * Created by lloyd on 2017-04-06
+ * @author Junbong
+ * @since 2017-04-06
  */
 public class JsonMessage implements Message<byte[]> {
   public static final String TYPE = JsonMessage.class.getName();

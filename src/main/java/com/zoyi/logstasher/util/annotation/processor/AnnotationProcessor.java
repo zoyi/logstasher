@@ -8,7 +8,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
- * Created by lou on 2017-04-04 19:59
+ * @author Loustler(Dongyeon Lee)
+ * @since 2017-04-04
  */
 abstract class AnnotationProcessor<T extends Annotation> implements AnnotationScanner<T> {
   private static final Map<String, Class<?>> ANNOTATED_CLASS_MAP = new ConcurrentHashMap<>();

@@ -4,7 +4,8 @@ package com.zoyi.logstasher.util;
  * Represent configuration type.
  *
  * @see Tuple
- * Created by lou on 2017-04-05 15:32
+ * @author Loustler(Dongyeon Lee)
+ * @since 2017-04-05
  */
 public enum TupleType {
   BOOLEAN(Boolean.class.getSimpleName()),
