@@ -24,6 +24,40 @@ public class ConfigurationImplTest {
 
 
   @Test
+  public void shouldTwoConfigurationMerged() {
+    final String key1 = "foo";
+    final String key2 = "year";
+    final String key3 = "hello";
+    final String value1 = "bar";
+    final Integer newValue2 = 2017;
+    final String newValue3 = "java";
+
+    conf.put(key1, value1)
+        .put("", "empty string") // ignore
+        .put(null, "null value") // ignore
+        .put(key2, 2016)
+        .put(key3, "world");
+
+    final Configuration newConf = new ConfigurationImpl().put(key2, newValue2)
+                                                         .put(key3, newValue3);
+
+    Configuration mergedConf = ConfigurationHelper.merge(conf, newConf);
+
+    assertThat(mergedConf).isNotEmpty();
+    assertThat(mergedConf.size()).isEqualTo(3);
+    assertThat(mergedConf.getString(key1)).isEqualTo(value1);
+    assertThat(mergedConf.getInteger(key2)).isEqualTo(newValue2);
+    assertThat(mergedConf.getString(key3)).isEqualTo(newValue3);
+  }
+
+
+  @Test
+  public void testGetBoolean() {
+    
+  }
+
+
+  @Test
   public void shouldGetDefaultValue() {
     final String defaultValue1 = "default";
     final Integer defaultValue2 = 55;
@@ -33,6 +67,7 @@ public class ConfigurationImplTest {
     assertThat(conf.getInteger("bar", defaultValue2)).isEqualTo(defaultValue2);
     assertThat(conf.getLong("hello world", defaultValue3)).isEqualTo(defaultValue3);
   }
+
 
   @Test
   public void shouldValueIsBoolean() {

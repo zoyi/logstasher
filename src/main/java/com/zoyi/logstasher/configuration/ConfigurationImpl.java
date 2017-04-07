@@ -1,5 +1,6 @@
 package com.zoyi.logstasher.configuration;
 
+import com.zoyi.logstasher.util.StringUtil;
 import com.zoyi.logstasher.util.Tuple;
 
 import java.util.Collection;
@@ -9,7 +10,8 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * Created by lou on 2017-04-05 15:04
+ * @author Loustler(Dongyeon Lee)
+ * @since 2017-04-05
  */
 public class ConfigurationImpl implements Configuration {
   private final Map<String, Tuple> conf = new HashMap<>();
@@ -23,9 +25,22 @@ public class ConfigurationImpl implements Configuration {
     return getOrDefault0(key, defaultValue);
   }
 
+
+  @Override
+  public Boolean getBoolean(final String key) {
+    return get0(key);
+  }
+
+
   @Override
   public Byte getByte(final String key, final Byte defaultValue) {
-    return getOrDefault0(key , defaultValue);
+    return getOrDefault0(key, defaultValue);
+  }
+
+
+  @Override
+  public Byte getByte(final String key) {
+    return get0(key);
   }
 
 
@@ -36,8 +51,20 @@ public class ConfigurationImpl implements Configuration {
 
 
   @Override
+  public Character getCharacter(final String key) {
+    return get0(key);
+  }
+
+
+  @Override
   public Short getShort(final String key, final Short defaultValue) {
     return getOrDefault0(key, defaultValue);
+  }
+
+
+  @Override
+  public Short getShort(final String key) {
+    return get0(key);
   }
 
 
@@ -48,8 +75,20 @@ public class ConfigurationImpl implements Configuration {
 
 
   @Override
+  public Float getFloat(final String key) {
+    return get0(key);
+  }
+
+
+  @Override
   public Integer getInteger(final String key, final Integer defaultValue) {
     return getOrDefault0(key, defaultValue);
+  }
+
+
+  @Override
+  public Integer getInteger(final String key) {
+    return get0(key);
   }
 
 
@@ -60,8 +99,20 @@ public class ConfigurationImpl implements Configuration {
 
 
   @Override
+  public Long getLong(final String key) {
+    return get0(key);
+  }
+
+
+  @Override
   public Double getDouble(final String key, final Double defaultValue) {
     return getOrDefault0(key, defaultValue);
+  }
+
+
+  @Override
+  public Double getDouble(final String key) {
+    return get0(key);
   }
 
 
@@ -72,53 +123,86 @@ public class ConfigurationImpl implements Configuration {
 
 
   @Override
+  public String getString(final String key) {
+    return get0(key);
+  }
+
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public Configuration put(final String key, final Boolean value) {
     return put0(key, value);
   }
 
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
-  public Configuration put(String key, Byte value) {
+  public Configuration put(final String key, final Byte value) {
     return put0(key, value);
   }
 
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Configuration put(final String key, final Character value) {
     return put0(key, value);
   }
 
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Configuration put(final String key, final Short value) {
     return put0(key, value);
   }
 
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Configuration put(final String key, final Float value) {
     return put0(key, value);
   }
 
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Configuration put(final String key, final Integer value) {
     return put0(key, value);
   }
 
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Configuration put(final String key, final Long value) {
     return put0(key, value);
   }
 
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Configuration put(final String key, final Double value) {
     return put0(key, value);
   }
 
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Configuration put(final String key, final String value) {
     return put0(key, value);
@@ -156,8 +240,11 @@ public class ConfigurationImpl implements Configuration {
 
 
   @Override
-  public Tuple put(final String key, final Tuple value) {
-    return conf.put(key, value);
+  public Tuple put(final String key, final Tuple tuple) {
+    if (StringUtil.isNotNullOrEmpty(key))
+      return conf.put(key, tuple);
+    else
+      return tuple;
   }
 
 
@@ -208,8 +295,14 @@ public class ConfigurationImpl implements Configuration {
   }
 
 
+  private <V> V get0(final Object key) {
+    return getOrDefault0(key, null);
+  }
+
+
   private <V> Configuration put0(final String key, final V v) {
-    conf.put(key, Tuple.mkTuple(v));
+    if (StringUtil.isNotNullOrEmpty(key))
+      conf.put(key, Tuple.mkTuple(v));
 
     return this;
   }
