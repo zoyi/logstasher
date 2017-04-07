@@ -131,4 +131,45 @@ public interface Configuration extends Map<String, Tuple> {
 
     return this;
   }
+
+
+  /**
+   * Merge another configuration to this.
+   *
+   * If they had same specified key, associated value overwrite with newConfiguration's value.
+   *
+   * If this configuration key is null, not merge.
+   *
+   * <pre>{@code
+   *  Configuration currentConf = new ConfigurationImpl();
+   *  currentConf.put(null, "null value"); // It will ignore by put
+   *  currentConf.put("", "empty value"); // It will ignore by put
+   *  currentConf.put("foo", "bar");
+   *  currentConf.put("hello", "world");
+   *
+   *  Configuration newConf = new ConfigurationImpl();
+   *  newConf.put("foo", "barr");
+   *  newConf.put("hello", "world!");
+   *
+   *  Configuration mergedConf = currentConf.merge(baseConf, newConf);
+   *  mergedConf.getString(null);    // It will return null
+   *  mergedConf.getString("");      // It will return null
+   *  mergedConf.getString("foo");   // It will return barr
+   *  mergedConf.getString("hello"); // It will return world!
+   * }</pre>
+   *
+   * @param newConfiguration The new configuration will merge with this.
+   * @return Merged configuration.
+   */
+  default Configuration merge(
+    final Configuration newConfiguration
+  ) {
+    for (Entry<String, Tuple> e : newConfiguration.entrySet()) {
+      if (StringUtil.isNotNullOrEmpty(e.getKey())) {
+        putEntry(e);
+      }
+    }
+
+    return this;
+  }
 }

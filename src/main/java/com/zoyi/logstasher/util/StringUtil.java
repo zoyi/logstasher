@@ -1,7 +1,6 @@
 package com.zoyi.logstasher.util;
 
 import java.util.Objects;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 /**
@@ -32,26 +31,4 @@ public class StringUtil {
    * @return {@code true} when string is {@code null} or empty, otherwise {@code false}
    */
   public static boolean isNullOrEmpty(final String str) { return !isNotNullOrEmpty(str); }
-
-
-  /**
-   * Do something when string is not null or empty and empty or null.
-   * If string is not null or empty, then do first consumer.
-   * If string is null or empty, then do last consumer.
-   * Each situation have consumer, you will handling situation via each consumer.
-   *
-   * @param str The string to test.
-   * @param notNullConsumer Do something when string is not null or empty.
-   * @param nullConsumer Do something when string is null or empty.
-   */
-  public static void ifNotNullOrEmptyThen(
-    final String str,
-    final Consumer<String> notNullConsumer,
-    final Consumer<String> nullConsumer
-  ) {
-    if (isNotNullOrEmpty(str))
-      notNullConsumer.accept(str);
-    else
-      nullConsumer.accept(str);
-  }
 }

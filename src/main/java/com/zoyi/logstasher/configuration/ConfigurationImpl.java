@@ -22,109 +22,109 @@ public class ConfigurationImpl implements Configuration {
 
   @Override
   public Boolean getBoolean(final String key, final Boolean defaultValue) {
-    return getOrDefault0(key, defaultValue);
+    return getValueOrDefault(key, defaultValue);
   }
 
 
   @Override
   public Boolean getBoolean(final String key) {
-    return get0(key);
+    return getValue(key);
   }
 
 
   @Override
   public Byte getByte(final String key, final Byte defaultValue) {
-    return getOrDefault0(key, defaultValue);
+    return getValueOrDefault(key, defaultValue);
   }
 
 
   @Override
   public Byte getByte(final String key) {
-    return get0(key);
+    return getValue(key);
   }
 
 
   @Override
   public Character getCharacter(final String key, final Character defaultValue) {
-    return getOrDefault0(key, defaultValue);
+    return getValueOrDefault(key, defaultValue);
   }
 
 
   @Override
   public Character getCharacter(final String key) {
-    return get0(key);
+    return getValue(key);
   }
 
 
   @Override
   public Short getShort(final String key, final Short defaultValue) {
-    return getOrDefault0(key, defaultValue);
+    return getValueOrDefault(key, defaultValue);
   }
 
 
   @Override
   public Short getShort(final String key) {
-    return get0(key);
+    return getValue(key);
   }
 
 
   @Override
   public Float getFloat(final String key, final Float defaultValue) {
-    return getOrDefault0(key, defaultValue);
+    return getValueOrDefault(key, defaultValue);
   }
 
 
   @Override
   public Float getFloat(final String key) {
-    return get0(key);
+    return getValue(key);
   }
 
 
   @Override
   public Integer getInteger(final String key, final Integer defaultValue) {
-    return getOrDefault0(key, defaultValue);
+    return getValueOrDefault(key, defaultValue);
   }
 
 
   @Override
   public Integer getInteger(final String key) {
-    return get0(key);
+    return getValue(key);
   }
 
 
   @Override
   public Long getLong(final String key, final Long defaultValue) {
-    return getOrDefault0(key, defaultValue);
+    return getValueOrDefault(key, defaultValue);
   }
 
 
   @Override
   public Long getLong(final String key) {
-    return get0(key);
+    return getValue(key);
   }
 
 
   @Override
   public Double getDouble(final String key, final Double defaultValue) {
-    return getOrDefault0(key, defaultValue);
+    return getValueOrDefault(key, defaultValue);
   }
 
 
   @Override
   public Double getDouble(final String key) {
-    return get0(key);
+    return getValue(key);
   }
 
 
   @Override
   public String getString(final String key, final String defaultValue) {
-    return getOrDefault0(key, defaultValue);
+    return getValueOrDefault(key, defaultValue);
   }
 
 
   @Override
   public String getString(final String key) {
-    return get0(key);
+    return getValue(key);
   }
 
 
@@ -133,7 +133,7 @@ public class ConfigurationImpl implements Configuration {
    */
   @Override
   public Configuration put(final String key, final Boolean value) {
-    return put0(key, value);
+    return putAsTuple(key, value);
   }
 
 
@@ -142,7 +142,7 @@ public class ConfigurationImpl implements Configuration {
    */
   @Override
   public Configuration put(final String key, final Byte value) {
-    return put0(key, value);
+    return putAsTuple(key, value);
   }
 
 
@@ -151,7 +151,7 @@ public class ConfigurationImpl implements Configuration {
    */
   @Override
   public Configuration put(final String key, final Character value) {
-    return put0(key, value);
+    return putAsTuple(key, value);
   }
 
 
@@ -160,7 +160,7 @@ public class ConfigurationImpl implements Configuration {
    */
   @Override
   public Configuration put(final String key, final Short value) {
-    return put0(key, value);
+    return putAsTuple(key, value);
   }
 
 
@@ -169,7 +169,7 @@ public class ConfigurationImpl implements Configuration {
    */
   @Override
   public Configuration put(final String key, final Float value) {
-    return put0(key, value);
+    return putAsTuple(key, value);
   }
 
 
@@ -178,7 +178,7 @@ public class ConfigurationImpl implements Configuration {
    */
   @Override
   public Configuration put(final String key, final Integer value) {
-    return put0(key, value);
+    return putAsTuple(key, value);
   }
 
 
@@ -187,7 +187,7 @@ public class ConfigurationImpl implements Configuration {
    */
   @Override
   public Configuration put(final String key, final Long value) {
-    return put0(key, value);
+    return putAsTuple(key, value);
   }
 
 
@@ -196,7 +196,7 @@ public class ConfigurationImpl implements Configuration {
    */
   @Override
   public Configuration put(final String key, final Double value) {
-    return put0(key, value);
+    return putAsTuple(key, value);
   }
 
 
@@ -205,7 +205,7 @@ public class ConfigurationImpl implements Configuration {
    */
   @Override
   public Configuration put(final String key, final String value) {
-    return put0(key, value);
+    return putAsTuple(key, value);
   }
 
 
@@ -286,7 +286,7 @@ public class ConfigurationImpl implements Configuration {
   }
 
 
-  private <V> V getOrDefault0(final Object key, final V v) {
+  private <V> V getValueOrDefault(final Object key, final V v) {
     Tuple<V> tuple;
 
     return (Objects.nonNull((tuple = ((Tuple<V>)conf.get(key)))) || containsKey(key))
@@ -295,12 +295,12 @@ public class ConfigurationImpl implements Configuration {
   }
 
 
-  private <V> V get0(final Object key) {
-    return getOrDefault0(key, null);
+  private <V> V getValue(final Object key) {
+    return getValueOrDefault(key, null);
   }
 
 
-  private <V> Configuration put0(final String key, final V v) {
+  private <V> Configuration putAsTuple(final String key, final V v) {
     if (StringUtil.isNotNullOrEmpty(key))
       conf.put(key, Tuple.mkTuple(v));
 
