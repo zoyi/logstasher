@@ -6,7 +6,8 @@ import java.util.Map;
 
 
 /**
- * Created by lloyd on 2017-04-04
+ * @author Junbong
+ * @since 2017-04-04
  */
 public interface Logstasher extends AutoCloseable {
   /**

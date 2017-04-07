@@ -9,7 +9,9 @@ import java.util.Objects;
 import static com.zoyi.logstasher.util.annotation.processor.StasherProcessor.STASHER_PROCESSOR;
 
 /**
- * Created by lloyd on 2017-04-04
+ * @author Junbong
+ * @author Loustler(Dongyeon Lee)
+ * @since 2017-04-04
  */
 public final class Logstashers {
   /**
@@ -61,17 +63,6 @@ public final class Logstashers {
    * @return The new Logstasher.
    */
   public static Logstasher newLogstasher(final String name) {
-    return newLogstasher(name, newConfiguration());
-  }
-
-
-  /**
-   * Returns default configuration.
-   *
-   * @see ConfigurationImpl
-   * @return The default(empty) configuration.
-   */
-  public static Configuration newConfiguration() {
-    return new ConfigurationImpl();
+    return newLogstasher(name, new ConfigurationImpl());
   }
 }

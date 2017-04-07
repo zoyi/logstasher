@@ -9,7 +9,8 @@ import java.util.Map;
 
 
 /**
- * Created by lloyd on 2017-04-04
+ * @author Junbong
+ * @since 2017-04-04
  */
 public class BsonMessage implements Message<byte[]> {
   public static final String TYPE = BsonMessage.class.getName();

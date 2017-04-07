@@ -5,7 +5,8 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 /**
- * Created by lou on 2017-04-05 14:21
+ * @author Loustler(Dongyeon Lee)
+ * @since 2017-04-05
  */
 public class StringUtil {
   private static final Predicate<String> NOT_NULL_OR_EMPTY = str -> Objects.nonNull(str)

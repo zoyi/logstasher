@@ -19,7 +19,8 @@ import java.util.List;
  *
  * The class that extends this interface needs instance to use generic.
  *
- * Created by lou on 2017-04-05 11:24
+ * @author Loustler(Dongyeon Lee)
+ * @since 2017-04-05
  */
 public interface AnnotationScanner <T extends Annotation> {
     String SCANNING_PATH = "com.zoyi.logstasher";
