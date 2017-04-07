@@ -22,8 +22,9 @@ import java.util.List;
  * Created by lou on 2017-04-05 11:24
  */
 public interface AnnotationScanner <T extends Annotation> {
-    String SCANNING_PATH = "com.zoyi.logstasher";
-    String CLASS_FILE_EXTENTION = ".class";
+  String SCANNING_PATH = "com.zoyi.logstasher";
+  String CLASS_FILE_EXTENSION = ".class";
+
 
   /**
    * Find Annotated Class using reflection.
@@ -31,6 +32,7 @@ public interface AnnotationScanner <T extends Annotation> {
    * @return The result found classes using reflection.
    */
   List<Class<?>> getAnnotatedClasses();
+
 
   /**
    * Scans all classes accessible from the context class loader which belong
@@ -69,12 +71,10 @@ public interface AnnotationScanner <T extends Annotation> {
    * Recursive method used to find all classes in a given directory and
    * sub-dirs.
    *
-   * @param directory
-   *            The base directory
-   * @param packageName
-   *            The package name for classes found inside the base directory
-   * @return The classes
-   * @throws ClassNotFoundException
+   * @param directory   The base directory
+   * @param packageName The package name for classes found inside the base directory
+   * @return The list of classes
+   * @throws ClassNotFoundException Exception occurred when there are no classes found in specified package path
    */
   default List<Class<?>> findClasses(final File directory, final String packageName)
     throws ClassNotFoundException {
@@ -89,8 +89,8 @@ public interface AnnotationScanner <T extends Annotation> {
 
       if (file.isDirectory()) {
         classes.addAll(findClasses(file, fqcn)); // recursive search
-      } else if (file.getName().endsWith(CLASS_FILE_EXTENTION)) { // check class file
-        classes.add(Class.forName(fqcn.substring(0, fqcn.length() - CLASS_FILE_EXTENTION.length())));
+      } else if (file.getName().endsWith(CLASS_FILE_EXTENSION)) { // check class file
+        classes.add(Class.forName(fqcn.substring(0, fqcn.length() - CLASS_FILE_EXTENSION.length())));
       }
     }
     return classes;

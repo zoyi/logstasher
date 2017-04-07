@@ -36,6 +36,7 @@ public class ConfigurationHelper {
    * @param newConfiguration The new configuration will merge.
    * @return Merged configuration.
    */
+  // TODO: I think this method have to be moved into Configuration class, not in helper class
   public static Configuration merge(
     final Configuration oldConfiguration,
     final Configuration newConfiguration

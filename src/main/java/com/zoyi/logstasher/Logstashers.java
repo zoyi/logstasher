@@ -6,7 +6,7 @@ import com.zoyi.logstasher.util.annotation.Stasher;
 
 import java.util.Objects;
 
-import static com.zoyi.logstasher.util.annotation.processor.StasherProcessor.STASHER_PROCESSOR;
+import static com.zoyi.logstasher.util.annotation.processor.StasherAnnotationProcessor.STASHER_PROCESSOR;
 
 /**
  * Created by lloyd on 2017-04-04
@@ -14,19 +14,16 @@ import static com.zoyi.logstasher.util.annotation.processor.StasherProcessor.STA
 public final class Logstashers {
   /**
    * Get Logstasher using name.
-   *
+   * <p>
    * Require configuration is not null.
+   * <p>
+   * When Configuration is {@code null}, throws {@link NullPointerException}.
    *
-   * When Configuration is null, throws NullPointerException.
-   *
-   * @see Configuration
-   * @see Stasher#name()
-   * @see Class#getSimpleName()
-   * @see com.zoyi.logstasher.util.annotation.Name
-   * @param name The name is Stasher#name() or Class#simpleName()
+   * @param name          The name is {@link Stasher#name()} or {@link Class#getSimpleName()}
    * @param configuration The configuration configure to Logstasher.
    * @return The new Logstasher.
-   * @throws NullPointerException
+   * @throws NullPointerException When specified configuration is {@code null}.
+   * @see Configuration
    */
   public static Logstasher newLogstasher(
       final String name,

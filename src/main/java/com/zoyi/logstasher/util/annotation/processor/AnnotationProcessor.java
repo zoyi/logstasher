@@ -20,8 +20,7 @@ abstract class AnnotationProcessor<T extends Annotation> implements AnnotationSc
 
 
   public void initialize() {
-    getAnnotatedClasses().stream()
-                         .forEach(klass -> addClass(klass));
+    getAnnotatedClasses().forEach(this::addClass);
   }
 
 
@@ -43,8 +42,9 @@ abstract class AnnotationProcessor<T extends Annotation> implements AnnotationSc
   }
 
 
+  @SuppressWarnings("unchecked")
   public List<Class<?>> getAnnotatedClasses() {
-    Class<T> annotationClass = (Class<T>)getGenericsClassType(0);
+    Class<T> annotationClass = (Class<T>) getGenericsClassType(0);
     List<Class<?>> classes = getClasses(SCANNING_PATH);
 
     return classes.stream()
