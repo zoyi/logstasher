@@ -10,7 +10,7 @@ import static org.junit.Assert.assertTrue;
 public class LogstasherTest {
   @Test
   public void shouldBeLogStasherNotNull() {
-    Logstasher logstasher = Logstashers.newLogstasher(Name.TCP.getName());
+    Logstasher logstasher = Logstashers.create(Name.TCP.getName());
 
     assertNotNull(logstasher);
     assertTrue(TcpLogstasherImpl.class.isAssignableFrom(logstasher.getClass()));

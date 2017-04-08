@@ -27,7 +27,7 @@ public final class Logstashers {
    * @throws NullPointerException When specified configuration is {@code null}.
    * @see Configuration
    */
-  public static Logstasher newLogstasher(
+  public static Logstasher create(
       final String name,
       final Configuration configuration
   ) {
@@ -59,7 +59,7 @@ public final class Logstashers {
    * @param name The name is Stasher#name() or Class#simpleName()
    * @return The new Logstasher.
    */
-  public static Logstasher newLogstasher(final String name) {
-    return newLogstasher(name, new ConfigurationImpl());
+  public static Logstasher create(final String name) {
+    return create(name, new ConfigurationImpl());
   }
 }

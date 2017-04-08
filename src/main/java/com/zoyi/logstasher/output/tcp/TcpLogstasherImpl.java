@@ -19,10 +19,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -34,6 +31,18 @@ import java.util.function.Consumer;
  */
 @Stasher(name = Name.TCP)
 public class TcpLogstasherImpl implements Logstasher {
+  public static Configuration defaultConfiguration() {
+    return
+        new ConfigurationImpl()
+            .put(POP_SIZE, DEFAULT_POP_SIZE)
+            .put(CONNECTION_TIME_OUT, DEFAULT_CONNECTION_TIMEOUT)
+            .put(RECONNECT_ATTEMPTS, DEFAULT_RECONNECT_ATTEMPTS)
+            .put(HOST, DEFAULT_HOST)
+            .put(PORT, DEFAULT_PORT)
+            .put(MAX_TRAVERSES, DEFAULT_MAX_TRAVERSES);
+  }
+
+
   private static final Integer DEFAULT_POP_SIZE           = 10;
   private static final Integer DEFAULT_CONNECTION_TIMEOUT = 5000;
   private static final Integer DEFAULT_RECONNECT_ATTEMPTS = 3;
@@ -63,15 +72,7 @@ public class TcpLogstasherImpl implements Logstasher {
 
   @Override
   public void initialize() {
-    final Configuration configuration = new ConfigurationImpl();
-    configuration.put(POP_SIZE, DEFAULT_POP_SIZE);
-    configuration.put(CONNECTION_TIME_OUT, DEFAULT_CONNECTION_TIMEOUT);
-    configuration.put(RECONNECT_ATTEMPTS, DEFAULT_RECONNECT_ATTEMPTS);
-    configuration.put(HOST, DEFAULT_HOST);
-    configuration.put(PORT, DEFAULT_PORT);
-    configuration.put(MAX_TRAVERSES, DEFAULT_MAX_TRAVERSES);
-
-    this.initialize(configuration);
+    this.initialize(defaultConfiguration());
   }
 
 
@@ -93,12 +94,24 @@ public class TcpLogstasherImpl implements Logstasher {
   @Override
   public synchronized void close() throws Exception {
     // TODO: handle messages which remained in queue
+    consumeMessagesLeftInQueue();
 
     // Disconnect socket
     if (checkSocketConnection()) {
       socketRef.get().close();
       socketRef.set(null);
     }
+  }
+
+
+  protected void consumeMessagesLeftInQueue() throws Exception {
+    final ExecutorService notifier = Executors.newSingleThreadExecutor();
+    notifier.submit((Callable<Void>) () -> {
+      push();
+      return null;
+    }).get();
+
+    notifier.awaitTermination(5000, TimeUnit.MILLISECONDS);
   }
 
 
@@ -181,12 +194,18 @@ public class TcpLogstasherImpl implements Logstasher {
 
   @Override
   public void put(Map<String, Object> data) {
+    this.put(new JsonMessage(data));
+  }
+
+
+  @Override
+  public void put(Message<?> message) {
     if (checkSocketConnection()) {
       final MessageQueue queue = BaseMessageQueue.create(
-        configuration.getInteger(BaseMessageQueue.CAPACITY, 1024),
-        configuration.getInteger(BaseMessageQueue.SIZE, 2048)
+          configuration.getInteger(BaseMessageQueue.CAPACITY, 1024),
+          configuration.getInteger(BaseMessageQueue.SIZE, 2048)
       );
-      queue.put(new JsonMessage(data));
+      queue.put(message);
 
       // Flush messages
       try {
@@ -210,7 +229,8 @@ public class TcpLogstasherImpl implements Logstasher {
   }
 
 
-  private void push() throws Exception {
+  @Override
+  public void push() throws Exception {
     if (checkSocketConnection()) {
       final List<Message> messages =
           BaseMessageQueue.getInstance()
@@ -225,8 +245,6 @@ public class TcpLogstasherImpl implements Logstasher {
         final JsonMessage jsonMessage = (JsonMessage) message;
         socketRef.get().write(Buffer.buffer(jsonMessage.encode()));
         socketRef.get().write("\n");
-
-        System.out.println("Write");
       }
 
       lastPushedTimestamp = Instant.now();

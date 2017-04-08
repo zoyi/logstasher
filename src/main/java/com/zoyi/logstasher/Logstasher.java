@@ -1,6 +1,7 @@
 package com.zoyi.logstasher;
 
 import com.zoyi.logstasher.configuration.Configuration;
+import com.zoyi.logstasher.message.Message;
 
 import java.util.Map;
 
@@ -26,4 +27,17 @@ public interface Logstasher extends AutoCloseable {
   void close() throws Exception;
 
   void put(Map<String, Object> data);
+
+  void put(Message<?> message);
+
+  /**
+   * Force push messages in queue.
+   * <p>
+   * <i>Note</i>: in most situation this method is not needed to call
+   * because {@link #put(Map)} may automatically invokes this.
+   * </p>
+   *
+   * @throws Exception when error occurred during push.
+   */
+  void push() throws Exception;
 }
