@@ -122,12 +122,8 @@ public class TcpLogstasherImpl implements Logstasher {
             final int reconnectAttempts = configuration.getInteger(RECONNECT_ATTEMPTS, DEFAULT_RECONNECT_ATTEMPTS);
 
             final NetClientOptions options = new NetClientOptions();
-            options.setConnectTimeout(
-              configuration.getInteger(CONNECTION_TIME_OUT, DEFAULT_CONNECTION_TIMEOUT)
-            );
-            options.setReconnectAttempts(
-              configuration.getInteger(RECONNECT_ATTEMPTS, DEFAULT_RECONNECT_ATTEMPTS)
-            );
+            options.setConnectTimeout(connectionTimeout);
+            options.setReconnectAttempts(reconnectAttempts);
 
             final AtomicReference<NetSocket> innerRef = new AtomicReference<>();
             final AtomicBoolean connecting = new AtomicBoolean(true);
