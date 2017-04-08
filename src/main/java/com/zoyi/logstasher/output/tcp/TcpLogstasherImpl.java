@@ -1,7 +1,6 @@
 package com.zoyi.logstasher.output.tcp;
 
 import com.zoyi.logstasher.Logstasher;
-import com.zoyi.logstasher.Logstashers;
 import com.zoyi.logstasher.configuration.Configuration;
 import com.zoyi.logstasher.configuration.ConfigurationImpl;
 import com.zoyi.logstasher.message.JsonMessage;
@@ -30,10 +29,25 @@ import java.util.function.Consumer;
 
 
 /**
- * Created by lloyd on 2017-04-04
+ * @author Junbong
+ * @since 2017-04-04
  */
 @Stasher(name = Name.TCP)
 public class TcpLogstasherImpl implements Logstasher {
+  private static final Integer DEFAULT_POP_SIZE           = 10;
+  private static final Integer DEFAULT_CONNECTION_TIMEOUT = 5000;
+  private static final Integer DEFAULT_RECONNECT_ATTEMPTS = 3;
+  private static final String  DEFAULT_HOST               = "localhost";
+  private static final Integer DEFAULT_PORT               = 12340;
+  private static final Integer DEFAULT_MAX_TRAVERSES      = 20;
+
+  public static final String POP_SIZE            = "popSize";
+  public static final String CONNECTION_TIME_OUT = "connectionTimeout";
+  public static final String RECONNECT_ATTEMPTS  = "reconnectAttempts";
+  public static final String HOST                = "host";
+  public static final String PORT                = "port";
+  public static final String MAX_TRAVERSES       = "maxTraverses";
+
   private final AtomicReference<NetSocket> socketRef = new AtomicReference<>();
   private Consumer<Void> onSocketConnectionClosedCallback;
 
@@ -50,12 +64,12 @@ public class TcpLogstasherImpl implements Logstasher {
   @Override
   public void initialize() {
     final Configuration configuration = new ConfigurationImpl();
-    configuration.put("popSize", 10);
-    configuration.put("connectionTimeout", 5000);
-    configuration.put("reconnectAttempts", 3);
-    configuration.put("host", "localhost");
-    configuration.put("port", 12340);
-    configuration.put("maxTraverses", 20);
+    configuration.put(POP_SIZE, DEFAULT_POP_SIZE);
+    configuration.put(CONNECTION_TIME_OUT, DEFAULT_CONNECTION_TIMEOUT);
+    configuration.put(RECONNECT_ATTEMPTS, DEFAULT_RECONNECT_ATTEMPTS);
+    configuration.put(HOST, DEFAULT_HOST);
+    configuration.put(PORT, DEFAULT_PORT);
+    configuration.put(MAX_TRAVERSES, DEFAULT_MAX_TRAVERSES);
 
     this.initialize(configuration);
   }
@@ -66,7 +80,7 @@ public class TcpLogstasherImpl implements Logstasher {
     // TODO: merge base configuration and new configuration
 
     if (Objects.isNull(configuration))
-      configuration = Logstashers.newConfiguration();
+      configuration = new ConfigurationImpl();
 
     if (!this.initialized) {
       this.configuration = configuration;
@@ -102,14 +116,18 @@ public class TcpLogstasherImpl implements Logstasher {
 
         try {
           final Future<NetSocket> result = notifier.submit(() -> {
-            final String host = configuration.getString("host", "localhost");
-            final int port = configuration.getInteger("port", 12340);
-            final int connectionTimeout = configuration.getInteger("connectionTimeout", 5000);
-            final int reconnectAttempts = configuration.getInteger("reconnectAttempts", 3);
+            final String host = configuration.getString(HOST, DEFAULT_HOST);
+            final int port = configuration.getInteger(PORT, DEFAULT_PORT);
+            final int connectionTimeout = configuration.getInteger(CONNECTION_TIME_OUT, DEFAULT_CONNECTION_TIMEOUT);
+            final int reconnectAttempts = configuration.getInteger(RECONNECT_ATTEMPTS, DEFAULT_RECONNECT_ATTEMPTS);
 
             final NetClientOptions options = new NetClientOptions();
-            options.setConnectTimeout(connectionTimeout);
-            options.setReconnectAttempts(reconnectAttempts);
+            options.setConnectTimeout(
+              configuration.getInteger(CONNECTION_TIME_OUT, DEFAULT_CONNECTION_TIMEOUT)
+            );
+            options.setReconnectAttempts(
+              configuration.getInteger(RECONNECT_ATTEMPTS, DEFAULT_RECONNECT_ATTEMPTS)
+            );
 
             final AtomicReference<NetSocket> innerRef = new AtomicReference<>();
             final AtomicBoolean connecting = new AtomicBoolean(true);
@@ -168,7 +186,10 @@ public class TcpLogstasherImpl implements Logstasher {
   @Override
   public void put(Map<String, Object> data) {
     if (checkSocketConnection()) {
-      final MessageQueue queue = BaseMessageQueue.create(1024, 2048);
+      final MessageQueue queue = BaseMessageQueue.create(
+        configuration.getInteger(BaseMessageQueue.CAPACITY, 1024),
+        configuration.getInteger(BaseMessageQueue.SIZE, 2048)
+      );
       queue.put(new JsonMessage(data));
 
       // Flush messages
@@ -199,7 +220,7 @@ public class TcpLogstasherImpl implements Logstasher {
           BaseMessageQueue.getInstance()
                           .pop(JsonMessage.TYPE,
                                popSize,
-                               configuration.getInteger("maxTraverses", 20)
+                               configuration.getInteger(MAX_TRAVERSES, DEFAULT_MAX_TRAVERSES)
                           );
 
       System.out.println("Messages to be written: " + messages.size());

@@ -1,18 +1,18 @@
 package com.zoyi.logstasher;
 
+import com.zoyi.logstasher.output.tcp.TcpLogstasherImpl;
 import com.zoyi.logstasher.util.annotation.Name;
 import org.junit.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
-/**
- * Created by lou on 2017-04-05 12:36
- */
 public class LogstasherTest {
   @Test
   public void shouldBeLogStasherNotNull() {
     Logstasher logstasher = Logstashers.newLogstasher(Name.TCP.getName());
 
-    assertThat(logstasher).isNotNull();
+    assertNotNull(logstasher);
+    assertTrue(TcpLogstasherImpl.class.isAssignableFrom(logstasher.getClass()));
   }
 }

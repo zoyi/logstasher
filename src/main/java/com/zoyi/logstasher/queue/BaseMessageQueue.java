@@ -9,11 +9,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 
 /**
- * Created by lloyd on 2017-04-04
+ * @author Junbong
+ * @since 2017-04-04
  */
 public class BaseMessageQueue implements MessageQueue {
-  public static int DEFAULT_CAPACITY_LIMIT = Integer.MAX_VALUE;
-  public static int DEFAULT_SIZE_LIMIT = Integer.MAX_VALUE;
+  public static final int    DEFAULT_CAPACITY_LIMIT = Integer.MAX_VALUE;
+  public static final int    DEFAULT_SIZE_LIMIT     = Integer.MAX_VALUE;
+  public static final String CAPACITY               = "capacity";
+  public static final String SIZE                   = "size";
 
 
   public static MessageQueue create(int capacity, int size) {
