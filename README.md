@@ -1,7 +1,13 @@
 # Logstasher
-Logstasher is _high-performance_ client library of [Logstash](https://www.elastic.co/kr/products/logstash) for Java programming language.
+Logstasher is _high-performance_ client library for [Logstash](https://www.elastic.co/kr/products/logstash) for Java programming language.
 
 _Note_: This project is under highly development :]
+
+## Key Features
+* High performance
+* Thread-safe
+* Light-weight
+* Easy-to-use
 
 ## Use
 The code below presents how easy to use Logstasher for logging.
@@ -51,12 +57,6 @@ configuration.set("maxTraverses", 20);
 
 Logstasher logstasher = Logstashers.newLogstasher("tcp", configuration);
 ```
-
-## Subjects
-* High performance
-* Thread-safe
-* Light-weight
-* Easy-to-use
 
 ## Lisence
 This project is under MIT lisence.
