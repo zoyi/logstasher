@@ -20,6 +20,11 @@ public class ConfigurationImpl implements Configuration {
   public ConfigurationImpl() {}
 
 
+  public ConfigurationImpl(Configuration configuration) {
+    this.merge(configuration);
+  }
+
+
   @Override
   public Boolean getBoolean(final String key, final Boolean defaultValue) {
     return getValueOrDefault(key, defaultValue);

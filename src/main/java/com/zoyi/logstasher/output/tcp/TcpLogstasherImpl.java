@@ -5,12 +5,14 @@ import com.zoyi.logstasher.configuration.Configuration;
 import com.zoyi.logstasher.configuration.ConfigurationImpl;
 import com.zoyi.logstasher.message.JsonMessage;
 import com.zoyi.logstasher.message.Message;
+import com.zoyi.logstasher.output.BaseLogstasherImpl;
 import com.zoyi.logstasher.queue.BaseMessageQueue;
 import com.zoyi.logstasher.queue.MessageQueue;
 import com.zoyi.logstasher.util.annotation.Name;
 import com.zoyi.logstasher.util.annotation.Stasher;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.net.NetClient;
 import io.vertx.core.net.NetClientOptions;
 import io.vertx.core.net.NetSocket;
 
@@ -18,11 +20,12 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+
+import static com.zoyi.logstasher.output.tcp.TcpLogstasherConfigs.*;
 
 
 /**
@@ -30,88 +33,120 @@ import java.util.function.Consumer;
  * @since 2017-04-04
  */
 @Stasher(name = Name.TCP)
-public class TcpLogstasherImpl implements Logstasher {
+public class TcpLogstasherImpl extends BaseLogstasherImpl {
   public static Configuration defaultConfiguration() {
-    return
-        new ConfigurationImpl()
-            .put(POP_SIZE, DEFAULT_POP_SIZE)
-            .put(CONNECTION_TIME_OUT, DEFAULT_CONNECTION_TIMEOUT)
-            .put(RECONNECT_ATTEMPTS, DEFAULT_RECONNECT_ATTEMPTS)
-            .put(HOST, DEFAULT_HOST)
-            .put(PORT, DEFAULT_PORT)
-            .put(MAX_TRAVERSES, DEFAULT_MAX_TRAVERSES);
+    return new ConfigurationImpl()
+        .put(HOST, DEFAULT_HOST)
+        .put(PORT, DEFAULT_PORT)
+        .put(CONNECTION_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT)
+        .put(RECONNECT_ATTEMPTS, DEFAULT_RECONNECT_ATTEMPTS)
+        .put(POP_SIZE, DEFAULT_POP_SIZE)
+        .put(PUSH_INTERVAL, DEFAULT_PUSH_INTERVAL)
+        .put(MAX_TRAVERSES, DEFAULT_MAX_TRAVERSES)
+        .put(MAX_CLOSE_WAITING_TIME, DEFAULT_MAX_CLOSE_WAITING_TIME);
   }
 
 
-  private static final Integer DEFAULT_POP_SIZE           = 10;
-  private static final Integer DEFAULT_CONNECTION_TIMEOUT = 5000;
-  private static final Integer DEFAULT_RECONNECT_ATTEMPTS = 3;
-  private static final String  DEFAULT_HOST               = "localhost";
-  private static final Integer DEFAULT_PORT               = 12340;
-  private static final Integer DEFAULT_MAX_TRAVERSES      = 20;
-
-  public static final String POP_SIZE            = "popSize";
-  public static final String CONNECTION_TIME_OUT = "connectionTimeout";
-  public static final String RECONNECT_ATTEMPTS  = "reconnectAttempts";
-  public static final String HOST                = "host";
-  public static final String PORT                = "port";
-  public static final String MAX_TRAVERSES       = "maxTraverses";
-
+  private final AtomicReference<Vertx> vertxRef = new AtomicReference<>();
+  private final AtomicReference<NetClient> clientRef = new AtomicReference<>();
   private final AtomicReference<NetSocket> socketRef = new AtomicReference<>();
   private Consumer<Void> onSocketConnectionClosedCallback;
 
   // Configuration
-  private Configuration configuration;
+  private Configuration configuration = defaultConfiguration();
   private int popSize;
+  private int maxTraverse;
 
   // Status
-  private boolean initialized;
+  private final AtomicBoolean initialized = new AtomicBoolean();
   private final AtomicBoolean tryingToConnect = new AtomicBoolean();
   private Instant lastPushedTimestamp;
 
 
   @Override
   public void initialize() {
-    this.initialize(defaultConfiguration());
+    this.initialize(null);
   }
 
 
   @Override
   public void initialize(Configuration configuration) {
-    // TODO: merge base configuration and new configuration
+    synchronized (this.initialized) {
+      if (!this.initialized.get()) {
+        if (configuration != null) getConfiguration().merge(configuration);
+        this.popSize = getConfiguration().getInteger(POP_SIZE, DEFAULT_POP_SIZE);
+        this.maxTraverse = getConfiguration().getInteger(MAX_TRAVERSES, DEFAULT_MAX_TRAVERSES);
+        this.initialized.set(true);
 
-    if (Objects.isNull(configuration))
-      configuration = new ConfigurationImpl();
-
-    if (!this.initialized) {
-      this.configuration = configuration;
-      this.popSize = configuration.getInteger("popSize", 10);
-      this.initialized = true;
+      } else {
+        printStdOut("This client already initialized: Can not be initialized again before closed");
+      }
     }
   }
 
 
   @Override
   public synchronized void close() throws Exception {
-    // TODO: handle messages which remained in queue
-    consumeMessagesLeftInQueue();
+    // Set this flag false to make it stop operating
+    this.initialized.set(false);
+
+    if (getConfiguration().getBoolean(
+        CONSUME_MESSAGES_AT_CLOSE, DEFAULT_CONSUME_MESSAGES_AT_CLOSE)) {
+      consumeAllMessagesInQueue();
+    }
 
     // Disconnect socket
     if (checkSocketConnection()) {
       socketRef.get().close();
       socketRef.set(null);
     }
+
+    // Close socket client
+    if (clientRef.get() != null) {
+      clientRef.get().close();
+      clientRef.set(null);
+      vertxRef.get().close();
+      vertxRef.set(null);
+      printStdOut("Client closed");
+    }
   }
 
 
-  protected void consumeMessagesLeftInQueue() throws Exception {
+  /**
+   * Consume all messages left in queue.
+   *
+   * @throws Exception when any exception occurred during consuming
+   */
+  protected void consumeAllMessagesInQueue() throws Exception {
+    final int waitingTime =
+        getConfiguration().getInteger(
+            MAX_CLOSE_WAITING_TIME, DEFAULT_MAX_CLOSE_WAITING_TIME);
+
+    // Handle all messages left in queue
     final ExecutorService notifier = Executors.newSingleThreadExecutor();
     notifier.submit((Callable<Void>) () -> {
+      // TODO: push(all)
       push();
       return null;
     }).get();
 
-    notifier.awaitTermination(5000, TimeUnit.MILLISECONDS);
+    notifier.shutdown();
+    notifier.awaitTermination(waitingTime, TimeUnit.MILLISECONDS);
+  }
+
+
+  /**
+   * Retrieve configuration which initialized with this client.
+   * <p>
+   *   <i>Note</i>: Do not change anything manually in this configuration.
+   *   Instead, {@link #close()} first this client, and call
+   *   {@link #initialize(Configuration)} again with new configuration.
+   * </p>
+   *
+   * @return configuration
+   */
+  protected Configuration getConfiguration() {
+    return this.configuration;
   }
 
 
@@ -129,38 +164,51 @@ public class TcpLogstasherImpl implements Logstasher {
 
         try {
           final Future<NetSocket> result = notifier.submit(() -> {
-            final String host = configuration.getString(HOST, DEFAULT_HOST);
-            final int port = configuration.getInteger(PORT, DEFAULT_PORT);
-            final int connectionTimeout = configuration.getInteger(CONNECTION_TIME_OUT, DEFAULT_CONNECTION_TIMEOUT);
-            final int reconnectAttempts = configuration.getInteger(RECONNECT_ATTEMPTS, DEFAULT_RECONNECT_ATTEMPTS);
+            if (clientRef.get() == null) {
+              final int connectionTimeout =
+                  getConfiguration().getInteger(CONNECTION_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT);
+              final int reconnectAttempts =
+                  getConfiguration().getInteger(RECONNECT_ATTEMPTS, DEFAULT_RECONNECT_ATTEMPTS);
 
-            final NetClientOptions options = new NetClientOptions();
-            options.setConnectTimeout(connectionTimeout);
-            options.setReconnectAttempts(reconnectAttempts);
+              final NetClientOptions options = new NetClientOptions();
+              options.setConnectTimeout(connectionTimeout);
+              options.setReconnectAttempts(reconnectAttempts);
+
+              final Vertx vertx = Vertx.vertx();
+              final NetClient netClient = vertx.createNetClient(options);
+              vertxRef.set(vertx);
+              clientRef.set(netClient);
+            }
+
+            final String host = getConfiguration().getString(HOST, DEFAULT_HOST);
+            final int port = getConfiguration().getInteger(PORT, DEFAULT_PORT);
 
             final AtomicReference<NetSocket> innerRef = new AtomicReference<>();
             final AtomicBoolean connecting = new AtomicBoolean(true);
 
-            Vertx.vertx()
-                 .createNetClient(options)
-                 .connect(port, host, connectionResult -> {
-                   if (connectionResult.succeeded()) {
-                     final NetSocket socket = connectionResult.result();
-                     socket.closeHandler(_void -> {
-                       // Remove reference to socket
-                       synchronized (socketRef) {
-                         socketRef.set(null);
-                         if (onSocketConnectionClosedCallback != null)
-                           onSocketConnectionClosedCallback.accept(null);
+            clientRef.get()
+                     .connect(port, host, connectionResult -> {
+                       if (connectionResult.succeeded()) {
+                         printStdOut(String.format("Socket connected(%s:%d)", host, port));
+
+                         final NetSocket socket = connectionResult.result();
+                         socket.closeHandler(_void -> {
+                           printStdOut(String.format("Socket closed(%s:%d)", host, port));
+
+                           // Remove reference to socket
+                           synchronized (socketRef) {
+                             socketRef.set(null);
+                             if (onSocketConnectionClosedCallback != null)
+                               onSocketConnectionClosedCallback.accept(null);
+                           }
+                         });
+                         innerRef.set(socket);
+                         connecting.set(false);
+                       } else {
+                         connecting.set(false);
+                         throw new RuntimeException(connectionResult.cause());
                        }
                      });
-                     innerRef.set(socket);
-                     connecting.set(false);
-                   } else {
-                     connecting.set(false);
-                     throw new RuntimeException(connectionResult.cause());
-                   }
-                 });
 
             while (connecting.get() && innerRef.get() == null) {
               /* await */
@@ -200,46 +248,54 @@ public class TcpLogstasherImpl implements Logstasher {
 
   @Override
   public void put(Message<?> message) {
-    if (checkSocketConnection()) {
-      final MessageQueue queue = BaseMessageQueue.create(
-          configuration.getInteger(BaseMessageQueue.CAPACITY, 1024),
-          configuration.getInteger(BaseMessageQueue.SIZE, 2048)
-      );
-      queue.put(message);
+    if (this.initialized.get()) {
+      if (checkSocketConnection()) {
+        final MessageQueue queue = BaseMessageQueue.create(
+            getConfiguration().getInteger(BaseMessageQueue.CAPACITY, 1024),
+            getConfiguration().getInteger(BaseMessageQueue.SIZE, 2048)
+        );
+        queue.put(message);
 
-      // Flush messages
-      try {
-        if (queue.isExceeded() ||
-            lastPushedTimestamp != null &&
-                Duration.between(lastPushedTimestamp, Instant.now())
-                        .toMillis() > 1000) {
-          push();
+        // Flush messages
+        try {
+          if (queue.isExceeded() ||
+              lastPushedTimestamp != null &&
+                  Duration.between(lastPushedTimestamp, Instant.now())
+                          .toMillis() > getConfiguration().getInteger(PUSH_INTERVAL, DEFAULT_PUSH_INTERVAL)) {
+            push();
+          }
+
+          lastPushedTimestamp = Instant.now();
+
+        } catch (Exception e) {
+          throw new RuntimeException(e);
         }
 
-        lastPushedTimestamp = Instant.now();
-
-      } catch (Exception e) {
-        throw new RuntimeException(e);
+      } else {
+        // TODO: Create putExceptionCallback
+        throw new RuntimeException("Socket connection failed");
       }
 
     } else {
-      // TODO: Create putExceptionCallback
-      throw new RuntimeException("Socket connection failed");
+      printStdOut("Can not accept any message: this client is closed or not initialized yet");
     }
   }
 
 
   @Override
   public void push() throws Exception {
+    this.push(JsonMessage.TYPE, popSize, maxTraverse);
+  }
+
+
+  @Override
+  protected void push(String type, int count, int maxTraverses) throws Exception {
     if (checkSocketConnection()) {
       final List<Message> messages =
           BaseMessageQueue.getInstance()
-                          .pop(JsonMessage.TYPE,
-                               popSize,
-                               configuration.getInteger(MAX_TRAVERSES, DEFAULT_MAX_TRAVERSES)
-                          );
+                          .pop(type, count, maxTraverses);
 
-      System.out.println("Messages to be written: " + messages.size());
+      printStdOut("Messages to be written: " + messages.size());
 
       for (Message message : messages) {
         final JsonMessage jsonMessage = (JsonMessage) message;
@@ -249,7 +305,7 @@ public class TcpLogstasherImpl implements Logstasher {
 
       lastPushedTimestamp = Instant.now();
 
-      System.out.println("Pushed");
+      printStdOut("Pushed");
 
     } else {
       // TODO: Create pushExceptionCallback

@@ -24,6 +24,14 @@ public interface Logstasher extends AutoCloseable {
    */
   void initialize(Configuration configuration);
 
+  /**
+   * Close this client to make stop operation.
+   * Once closed, not any messages can be accepted through this client
+   * until {@link #initialize()} method called.
+   *
+   * @throws Exception When any exception occurred during closing
+   * @apiNote This method should blocks all input, and consume all messages by configuration.
+   */
   void close() throws Exception;
 
   void put(Map<String, Object> data);

@@ -2,6 +2,9 @@ package com.zoyi.logstasher.message;
 
 import io.vertx.core.json.JsonObject;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Map;
 import java.util.Objects;
 
@@ -18,19 +21,25 @@ public class JsonMessage implements Message<byte[]> {
   private final JsonObject document;
 
 
-  public JsonMessage(Map<String, Object> data) {
-    this(new JsonObject().put("type", TYPE).put("body", data));
+  public JsonMessage() {
+    this(null);
   }
 
 
-  public JsonMessage(JsonObject document) {
-    this.document = document;
+  public JsonMessage(Map<String, Object> data) {
+    this.document = new JsonObject().put("type", TYPE);
+
+    // Initialize body
+    getDocument().put("body", data != null ? data : new JsonObject());
+
+    // Timestamp
+    setTimestamp(LocalDateTime.now());
   }
 
 
   @Override
   public String toString() {
-    return this.document.encode();
+    return getDocument().encode();
   }
 
 
@@ -39,13 +48,13 @@ public class JsonMessage implements Message<byte[]> {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     JsonMessage that = (JsonMessage) o;
-    return Objects.equals(document, that.document);
+    return Objects.equals(this.getDocument(), that.getDocument());
   }
 
 
   @Override
   public int hashCode() {
-    return Objects.hash(document);
+    return Objects.hash(getDocument());
   }
 
 
@@ -69,9 +78,104 @@ public class JsonMessage implements Message<byte[]> {
   @Override
   public byte[] encode() throws Exception {
     // TODO: cache
-    return this.document
+    return getDocument()
         .getJsonObject("body")
         .encode()
         .getBytes(DEFAULT_CHARSET);
+  }
+
+
+  protected JsonObject getDocument() {
+    return this.document;
+  }
+
+
+  protected JsonObject getBody() {
+    return getDocument().getJsonObject("body");
+  }
+
+
+  @Override
+  public Message<byte[]> setTimestamp(Instant instant) {
+    return this.setTimestamp(
+        LocalDateTime.ofInstant(instant, ZoneId.systemDefault()));
+  }
+
+
+  @Override
+  public Message<byte[]> setTimestamp(LocalDateTime localDateTime) {
+    Objects.requireNonNull(localDateTime);
+    getBody().put("@timestamp", localDateTime.toString());
+    return this;
+  }
+
+
+  @Override
+  public Message<byte[]> put(String key, Boolean value) {
+    getBody().put(key, value);
+    return this;
+  }
+
+
+  @Override
+  public Message<byte[]> put(String key, Character value) {
+    getBody().put(key, value);
+    return this;
+  }
+
+
+  @Override
+  public Message<byte[]> put(String key, Short value) {
+    getBody().put(key, value);
+    return this;
+  }
+
+
+  @Override
+  public Message<byte[]> put(String key, Float value) {
+    getBody().put(key, value);
+    return this;
+  }
+
+
+  @Override
+  public Message<byte[]> put(String key, Integer value) {
+    getBody().put(key, value);
+    return this;
+  }
+
+
+  @Override
+  public Message<byte[]> put(String key, Long value) {
+    getBody().put(key, value);
+    return this;
+  }
+
+
+  @Override
+  public Message<byte[]> put(String key, Double value) {
+    getBody().put(key, value);
+    return this;
+  }
+
+
+  @Override
+  public Message<byte[]> put(String key, CharSequence value) {
+    getBody().put(key, value);
+    return this;
+  }
+
+
+  @Override
+  public Message<byte[]> put(String key, String value) {
+    getBody().put(key, value);
+    return this;
+  }
+
+
+  @Override
+  public Message<byte[]> put(String key, Object value) {
+    getBody().put(key, value);
+    return this;
   }
 }
