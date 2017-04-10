@@ -1,4 +1,7 @@
 # Logstasher
+
+[![](https://jitpack.io/v/zoyi/logstasher.svg)](https://jitpack.io/#zoyi/logstasher)
+
 Logstasher is _high-performance_ client library for [Logstash](https://www.elastic.co/kr/products/logstash) for Java programming language.
 
 _Note_: This project is under highly development :]
