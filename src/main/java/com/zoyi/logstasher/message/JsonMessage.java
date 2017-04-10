@@ -33,7 +33,9 @@ public class JsonMessage implements Message<byte[]> {
     getDocument().put("body", data != null ? data : new JsonObject());
 
     // Timestamp
-    setTimestamp(LocalDateTime.now());
+    if (!containsKey("@timestamp") && !containsKey("timestamp")) {
+      setTimestamp(LocalDateTime.now());
+    }
   }
 
 
@@ -77,9 +79,11 @@ public class JsonMessage implements Message<byte[]> {
 
   @Override
   public byte[] encode() throws Exception {
-    // TODO: cache
-    return getDocument()
-        .getJsonObject("body")
+    if (!containsKey("@timestamp") && !containsKey("timestamp")) {
+      setTimestamp(LocalDateTime.now());
+    }
+
+    return getBody()
         .encode()
         .getBytes(DEFAULT_CHARSET);
   }
@@ -95,8 +99,14 @@ public class JsonMessage implements Message<byte[]> {
   }
 
 
+  public boolean containsKey(String key) {
+    return getBody().containsKey(key);
+  }
+
+
   @Override
   public Message<byte[]> setTimestamp(Instant instant) {
+    Objects.requireNonNull(instant);
     return this.setTimestamp(
         LocalDateTime.ofInstant(instant, ZoneId.systemDefault()));
   }

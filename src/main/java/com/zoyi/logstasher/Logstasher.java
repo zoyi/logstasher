@@ -34,8 +34,25 @@ public interface Logstasher extends AutoCloseable {
    */
   void close() throws Exception;
 
+  /**
+   * Put new log data into this client.
+   * Specified map converted to {@link Message} object automatically.
+   * If given message does not have {@code @timestamp} field,
+   * client will put this field with current time.
+   *
+   * @param data Log message
+   * @throws NullPointerException specified log message is {@code null}.
+   */
   void put(Map<String, Object> data);
 
+  /**
+   * Put new log data into this client.
+   * If given message does not have {@code @timestamp} field,
+   * client will put this field with current time.
+   *
+   * @param message Log message
+   * @throws NullPointerException specified log message is {@code null}.
+   */
   void put(Message<?> message);
 
   /**
