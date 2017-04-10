@@ -13,9 +13,8 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 public @interface Stasher {
 
-  String EMPTY = "";
-
-  String value() default EMPTY;
-
+  /**
+   * The name of Stasher.
+   */
   Name name() default Name.EMPTY;
 }

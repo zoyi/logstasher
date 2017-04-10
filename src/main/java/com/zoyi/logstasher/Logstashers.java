@@ -15,7 +15,7 @@ import static com.zoyi.logstasher.util.annotation.processor.StasherAnnotationPro
  */
 public final class Logstashers {
   /**
-   * Get Logstasher using name.
+   * Create Logstasher using name.
    * <p>
    * Require configuration is not null.
    * <p>
@@ -48,15 +48,13 @@ public final class Logstashers {
 
 
   /**
-   * Get Logstasher using name.
-   *
-   * The Configuration to be empty configuration.
+   * Create Logstasher using name.
+   * <p>
+   *  Call {@link #create(String, Configuration)} with empty configuration as parameter.
+   * </p>
    *
    * @see Configuration
-   * @see Stasher#name()
-   * @see com.zoyi.logstasher.util.annotation.Name
-   * @see Class#getSimpleName()
-   * @param name The name is Stasher#name() or Class#simpleName()
+   * @param name  The name is {@link Stasher#name()} or {@link Class#getSimpleName()}
    * @return The new Logstasher.
    */
   public static Logstasher create(final String name) {
