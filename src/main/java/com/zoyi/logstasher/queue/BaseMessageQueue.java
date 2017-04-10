@@ -13,17 +13,32 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @since 2017-04-04
  */
 public class BaseMessageQueue implements MessageQueue {
-  public static final int    DEFAULT_CAPACITY_LIMIT = Integer.MAX_VALUE;
-  public static final int    DEFAULT_SIZE_LIMIT     = Integer.MAX_VALUE;
+  public static final int    DEFAULT_CAPACITY_LIMIT = 512;
+  public static final int    DEFAULT_SIZE_LIMIT     = DEFAULT_CAPACITY_LIMIT * 1024;
   public static final String CAPACITY               = "capacity";
   public static final String SIZE                   = "size";
 
 
+  /**
+   * Create new message queue with specified capacity and size.
+   * <p>
+   *   The capacity means how many message can be queued in this queue.
+   * </p>
+   * <p>
+   *   The size means actual memory bytes of all messages in this queue.
+   *   So this value always has to be equal or bigger than capacity.
+   * </p>
+   *
+   * @param capacity Maximum count of messages
+   * @param size     Maximum memory allocation size of all messages
+   * @return Newly created message queue or instance created before.
+   */
   public static MessageQueue create(int capacity, int size) {
     if (instance == null) {
       synchronized (BaseMessageQueue.class) {
         if (instance == null) {
-          // TODO: use default value when arguments are negative number
+          capacity = Math.max(capacity, DEFAULT_CAPACITY_LIMIT);
+          size = Math.max(size, DEFAULT_SIZE_LIMIT);
 
           instance = new BaseMessageQueue((int)(capacity * 1.1), (int)(size * 1.1));
         }
@@ -74,15 +89,24 @@ public class BaseMessageQueue implements MessageQueue {
     synchronized (qInternal) {
       Message msg;
       int traverse = 0;
+      int reduceSize = 0;
 
       while ((msg=qInternal.peek()) != null
           && traverse <= maxTraverses
           && result.size() < count) {
         if (msg.getType().equals(type)) {
-          result.add(qInternal.poll());
+          final Message message = qInternal.poll();
+          result.add(message);
+
+          // Note message sizes
+          reduceSize += message.getByteLength();
         }
+
         traverse++;
       }
+
+      // Arrange size
+      currentByteSize.addAndGet(-reduceSize);
     }
 
     return result;
