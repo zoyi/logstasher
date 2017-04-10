@@ -1,6 +1,10 @@
 apply plugin: 'java'
 
 
+group 'com.zoyi.logstasher'
+version '0.1.0'
+
+
 repositories {
   jcenter()
   maven { url "https://oss.sonatype.org/content/groups/public" }
@@ -9,8 +13,5 @@ repositories {
 
 dependencies {
   compile group: 'io.vertx', name: 'vertx-core', version: '3.4.1'
-
-  compile group: 'com.github.kohanyirobert', name: 'ebson', version: '0.4-SNAPSHOT'
-
   testCompile 'junit:junit:4.12'
 }
