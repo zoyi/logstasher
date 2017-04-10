@@ -4,6 +4,7 @@ import com.zoyi.logstasher.message.Message;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -17,6 +18,8 @@ public class BaseMessageQueue implements MessageQueue {
   public static final int    DEFAULT_SIZE_LIMIT     = DEFAULT_CAPACITY_LIMIT * 1024;
   public static final String CAPACITY               = "capacity";
   public static final String SIZE                   = "size";
+
+  private final org.apache.logging.log4j.Logger log = org.apache.logging.log4j.LogManager.getLogger(this.getClass());
 
 
   /**
@@ -41,6 +44,9 @@ public class BaseMessageQueue implements MessageQueue {
           size = Math.max(size, DEFAULT_SIZE_LIMIT);
 
           instance = new BaseMessageQueue((int)(capacity * 1.1), (int)(size * 1.1));
+
+          //#
+          instance.log.debug("Queue created: " + instance.toString());
         }
       }
     }
@@ -69,11 +75,44 @@ public class BaseMessageQueue implements MessageQueue {
 
 
   @Override
+  public boolean equals(Object o) {
+    return false;
+  }
+
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(capacityLimit, sizeLimit);
+  }
+
+
+  @Override
+  public String toString() {
+    final StringBuilder sb = new StringBuilder("BaseMessageQueue{");
+
+    synchronized (qInternal) {
+      sb.append("capacityLimit=").append(capacityLimit);
+      sb.append(", sizeLimit=").append(sizeLimit);
+      sb.append(", currentCapacity=").append(qInternal.size());
+      sb.append(", currentSize=").append(currentByteSize);
+      sb.append('}');
+    }
+
+    return sb.toString();
+  }
+
+
+  @Override
   public void put(Message<?> message) {
+    Objects.requireNonNull(message);
+
     synchronized (qInternal) {
       qInternal.add(message);
       currentByteSize.addAndGet(message.getByteLength());
     }
+
+    //#
+    log.debug(this.toString());
   }
 
 
@@ -94,7 +133,7 @@ public class BaseMessageQueue implements MessageQueue {
       while ((msg=qInternal.peek()) != null
           && traverse <= maxTraverses
           && result.size() < count) {
-        if (msg.getType().equals(type)) {
+        if (type == null || msg.getType().equals(type)) {
           final Message message = qInternal.poll();
           result.add(message);
 
@@ -108,6 +147,9 @@ public class BaseMessageQueue implements MessageQueue {
       // Arrange size
       currentByteSize.addAndGet(-reduceSize);
     }
+
+    //#
+    log.debug(this.toString());
 
     return result;
   }

@@ -25,6 +25,7 @@ public class CliTest {
     configuration.put(RECONNECT_ATTEMPTS, 1);
     configuration.put(POP_SIZE, 10);
     configuration.put(MAX_TRAVERSES, 20);
+    configuration.put(PUSH_INTERVAL, 2000);
 
     // localhost:12340
     logstasher.initialize(configuration);

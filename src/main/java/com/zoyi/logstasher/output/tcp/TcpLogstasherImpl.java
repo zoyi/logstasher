@@ -56,11 +56,12 @@ public class TcpLogstasherImpl extends BaseLogstasherImpl {
   private Configuration configuration = defaultConfiguration();
   private int popSize;
   private int maxTraverse;
+  private int pushInterval;
 
   // Status
   private final AtomicBoolean initialized = new AtomicBoolean();
   private final AtomicBoolean tryingToConnect = new AtomicBoolean();
-  private Instant lastPushedTimestamp;
+  private Instant lastPushedTimestamp = Instant.now();
 
 
   @Override
@@ -76,6 +77,7 @@ public class TcpLogstasherImpl extends BaseLogstasherImpl {
         if (configuration != null) getConfiguration().merge(configuration);
         this.popSize = getConfiguration().getInteger(POP_SIZE, DEFAULT_POP_SIZE);
         this.maxTraverse = getConfiguration().getInteger(MAX_TRAVERSES, DEFAULT_MAX_TRAVERSES);
+        this.pushInterval = getConfiguration().getInteger(PUSH_INTERVAL, DEFAULT_PUSH_INTERVAL);
         this.initialized.set(true);
 
       } else {
@@ -256,16 +258,20 @@ public class TcpLogstasherImpl extends BaseLogstasherImpl {
         );
         queue.put(message);
 
+        printStdOut(">>\t" +queue.toString());
+
         // Flush messages
         try {
+          printStdOut("Queue isExceeded: " + queue.isExceeded());
+
           if (queue.isExceeded() ||
               lastPushedTimestamp != null &&
                   Duration.between(lastPushedTimestamp, Instant.now())
-                          .toMillis() > getConfiguration().getInteger(PUSH_INTERVAL, DEFAULT_PUSH_INTERVAL)) {
+                          .toMillis() > this.pushInterval) {
             push();
           }
 
-          lastPushedTimestamp = Instant.now();
+          printStdOut("<<\t" + queue.toString());
 
         } catch (Exception e) {
           throw new RuntimeException(e);

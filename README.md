@@ -20,7 +20,9 @@ allprojects {
 }
   
 dependencies {
-  compile 'com.github.zoyi:logstasher:v0.1.1'
+  compile ('com.github.zoyi:logstasher:v0.1.2') {
+    exclude group: 'org.apache.logging.log4j'
+  }
 }
 ```
 
