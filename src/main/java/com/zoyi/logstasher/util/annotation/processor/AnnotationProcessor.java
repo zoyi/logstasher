@@ -43,6 +43,11 @@ abstract class AnnotationProcessor<T extends Annotation> implements AnnotationSc
   }
 
 
+  /**
+   * Retrieve the list of class annotated by {@code T}.
+   *
+   * @return The List of annotated classes.
+   */
   @SuppressWarnings("unchecked")
   public List<Class<?>> getAnnotatedClasses() {
     Class<T> annotationClass = (Class<T>) getGenericsClassType(0);
@@ -54,9 +59,16 @@ abstract class AnnotationProcessor<T extends Annotation> implements AnnotationSc
   }
 
 
+  /**
+   * Associates the specified {@code klass} with the specified {@code key} in the map.
+   *
+   * @param key key with which the specified class to be associated.
+   * @param klass class to be associated with the specified key
+   * @throws NullPointerException if the specified key or value is null
+   */
   void put(final String key, final Class<?> klass) {
-    if (Objects.isNull(key))
-      throw new NullPointerException("Key is not null.");
+    Objects.requireNonNull(key);
+    Objects.requireNonNull(klass);
 
     ANNOTATED_CLASS_MAP.put(key, klass);
   }

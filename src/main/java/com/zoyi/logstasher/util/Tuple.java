@@ -5,17 +5,13 @@ package com.zoyi.logstasher.util;
  * @since 2017-04-05
  */
 public class Tuple <V> {
-  final V value;
+  private final V value;
 
-  final TupleType type;
+  private final TupleType type;
 
   private Tuple(V value, TupleType type) {
     this.value = value;
     this.type = type;
-  }
-
-  private Tuple(V value, Class klass) {
-    this(value, TupleType.of(klass));
   }
 
 
@@ -27,7 +23,7 @@ public class Tuple <V> {
    * @return new Tuple
    */
   public static <V> Tuple mkTuple(final V value) {
-    return new Tuple(value, value.getClass());
+    return mkTuple(value, value.getClass());
   }
 
 
@@ -42,7 +38,7 @@ public class Tuple <V> {
    * @return new Tuple
    */
   public static <V> Tuple mkTuple(final V value, final Class type) {
-    return new Tuple(value, type);
+    return new Tuple(value, TupleType.of(type));
   }
 
 
@@ -78,7 +74,7 @@ public class Tuple <V> {
 
     Tuple<?> tuple = (Tuple<?>)o;
 
-    if (!value.equals(tuple.value)) return false;
+    if (!value.equals(tuple.getValue())) return false;
     return type == tuple.type;
   }
 
