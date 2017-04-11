@@ -1,14 +1,12 @@
 package com.zoyi.logstasher;
 
 import com.zoyi.logstasher.configuration.Configuration;
-import com.zoyi.logstasher.configuration.ConfigurationImpl;
 import com.zoyi.logstasher.message.JsonMessage;
 import com.zoyi.logstasher.message.Message;
+import com.zoyi.logstasher.output.tcp.TcpConfiguration;
 import com.zoyi.logstasher.output.tcp.TcpLogstasherImpl;
 
 import java.util.Scanner;
-
-import static com.zoyi.logstasher.output.tcp.TcpLogstasherConfigs.*;
 
 
 /**
@@ -18,14 +16,11 @@ public class CliTest {
   public static void main(String[] args) throws Exception {
     final Logstasher logstasher = new TcpLogstasherImpl();
 
-    final Configuration configuration = new ConfigurationImpl();
-    configuration.put(HOST, "localhost");
-    configuration.put(PORT, 12340);
-    configuration.put(CONNECTION_TIMEOUT, 1000);
-    configuration.put(RECONNECT_ATTEMPTS, 1);
-    configuration.put(POP_SIZE, 10);
-    configuration.put(MAX_TRAVERSES, 20);
-    configuration.put(PUSH_INTERVAL, 2000);
+    final Configuration configuration =
+        new TcpConfiguration().setHost("localhost")
+                              .setPort(12340)
+                              .setPushInterval(1000)
+                              .setTimezone("UTC");
 
     // localhost:12340
     logstasher.initialize(configuration);

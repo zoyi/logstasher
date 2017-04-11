@@ -38,4 +38,6 @@ public interface Message<T> {
   Message<T> put(String key, String value);
 
   Message<T> put(String key, Object value);
+
+  boolean containsKey(String key);
 }

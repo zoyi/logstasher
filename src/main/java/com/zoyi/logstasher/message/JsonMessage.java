@@ -31,11 +31,6 @@ public class JsonMessage implements Message<byte[]> {
 
     // Initialize body
     getDocument().put("body", data != null ? data : new JsonObject());
-
-    // Timestamp
-    if (!containsKey("@timestamp") && !containsKey("timestamp")) {
-      setTimestamp(LocalDateTime.now());
-    }
   }
 
 
@@ -79,10 +74,10 @@ public class JsonMessage implements Message<byte[]> {
 
   @Override
   public byte[] encode() throws Exception {
-    if (!containsKey("@timestamp") && !containsKey("timestamp")) {
-      setTimestamp(LocalDateTime.now());
-    }
+    // Set type to filter
+    getBody().put("type", "logstasher");
 
+    // Encode to bytes
     return getBody()
         .encode()
         .getBytes(DEFAULT_CHARSET);
@@ -99,6 +94,7 @@ public class JsonMessage implements Message<byte[]> {
   }
 
 
+  @Override
   public boolean containsKey(String key) {
     return getBody().containsKey(key);
   }

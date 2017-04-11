@@ -2,12 +2,12 @@ package com.zoyi.logstasher.output.tcp;
 
 import com.zoyi.logstasher.Logstasher;
 import com.zoyi.logstasher.configuration.Configuration;
-import com.zoyi.logstasher.configuration.ConfigurationImpl;
 import com.zoyi.logstasher.message.JsonMessage;
 import com.zoyi.logstasher.message.Message;
 import com.zoyi.logstasher.output.BaseLogstasherImpl;
 import com.zoyi.logstasher.queue.BaseMessageQueue;
 import com.zoyi.logstasher.queue.MessageQueue;
+import com.zoyi.logstasher.util.StringUtil;
 import com.zoyi.logstasher.util.annotation.Name;
 import com.zoyi.logstasher.util.annotation.Stasher;
 import io.vertx.core.Vertx;
@@ -18,6 +18,8 @@ import io.vertx.core.net.NetSocket;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
@@ -25,7 +27,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
-import static com.zoyi.logstasher.output.tcp.TcpLogstasherConfigs.*;
+import static com.zoyi.logstasher.output.tcp.TcpConfiguration.*;
 
 
 /**
@@ -34,26 +36,13 @@ import static com.zoyi.logstasher.output.tcp.TcpLogstasherConfigs.*;
  */
 @Stasher(name = Name.TCP)
 public class TcpLogstasherImpl extends BaseLogstasherImpl {
-  public static Configuration defaultConfiguration() {
-    return new ConfigurationImpl()
-        .put(HOST, DEFAULT_HOST)
-        .put(PORT, DEFAULT_PORT)
-        .put(CONNECTION_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT)
-        .put(RECONNECT_ATTEMPTS, DEFAULT_RECONNECT_ATTEMPTS)
-        .put(POP_SIZE, DEFAULT_POP_SIZE)
-        .put(PUSH_INTERVAL, DEFAULT_PUSH_INTERVAL)
-        .put(MAX_TRAVERSES, DEFAULT_MAX_TRAVERSES)
-        .put(MAX_CLOSE_WAITING_TIME, DEFAULT_MAX_CLOSE_WAITING_TIME);
-  }
-
-
   private final AtomicReference<Vertx> vertxRef = new AtomicReference<>();
   private final AtomicReference<NetClient> clientRef = new AtomicReference<>();
   private final AtomicReference<NetSocket> socketRef = new AtomicReference<>();
   private Consumer<Void> onSocketConnectionClosedCallback;
 
   // Configuration
-  private Configuration configuration = defaultConfiguration();
+  private Configuration configuration = new TcpConfiguration();
   private int popSize;
   private int maxTraverse;
   private int pushInterval;
@@ -305,6 +294,7 @@ public class TcpLogstasherImpl extends BaseLogstasherImpl {
 
       for (Message message : messages) {
         final JsonMessage jsonMessage = (JsonMessage) message;
+        setTimestampIfNotSet(message);
         socketRef.get().write(Buffer.buffer(jsonMessage.encode()));
         socketRef.get().write("\n");
       }
@@ -315,6 +305,17 @@ public class TcpLogstasherImpl extends BaseLogstasherImpl {
 
     } else {
       // TODO: Create pushExceptionCallback
+    }
+  }
+
+
+  protected void setTimestampIfNotSet(Message message) {
+    if (!message.containsKey("@timestamp") && !message.containsKey("timestamp")) {
+      final String timezone = getConfiguration().getString("timezone");
+      message.setTimestamp(LocalDateTime.now(
+          StringUtil.isNotNullOrEmpty(timezone)
+              ? ZoneId.of(timezone)
+              : ZoneId.systemDefault()));
     }
   }
 }
