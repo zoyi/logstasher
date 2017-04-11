@@ -1,15 +1,9 @@
 package com.zoyi.logstasher.util.annotation.processor;
 
-import java.io.File;
-import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
 
 /**
@@ -23,8 +17,8 @@ import java.util.List;
  * @since 2017-04-05
  */
 public interface AnnotationScanner <T extends Annotation> {
-  String SCANNING_PATH = "com.zoyi.logstasher";
-  String CLASS_FILE_EXTENSION = ".class";
+  String SCANNING_PATH        = "com.zoyi.logstasher";
+
 
 
   /**
@@ -45,55 +39,17 @@ public interface AnnotationScanner <T extends Annotation> {
    * @throws RuntimeException if any class not found.
    */
   default List<Class<?>> getClasses(final String packageName) {
-    ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-    String path = packageName.replace('.', '/');
+    String srcRootPath = this.getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
     List<Class<?>> classes = new ArrayList<Class<?>>();
 
-    try {
-      Enumeration<URL> resources = classLoader.getResources(path);
-      List<File> dirs = new ArrayList<File>();
-      while (resources.hasMoreElements()) {
-        URI uri = new URI(resources.nextElement()
-                                   .toString());
-        dirs.add(new File(uri.getPath()));
-      }
-      for (File directory : dirs) {
-        classes.addAll(findClasses(directory, packageName));
-      }
-    } catch (IOException | URISyntaxException | ClassNotFoundException e) {
-      throw new RuntimeException("Can not find any class");
-    }
+    if (srcRootPath.endsWith(".jar")) // load classes in jar.
+      classes.addAll(AnnotationScannerHelper.loadClassesFromJar(
+        srcRootPath,
+        SCANNING_PATH.replace('.', '/'))
+      );
+    else // load classes in class path(current classpath).
+      classes.addAll(AnnotationScannerHelper.loadClassFromClassPath(srcRootPath));
 
-    return classes;
-  }
-
-
-  /**
-   * Recursive method used to find all classes in a given directory and
-   * sub-dirs.
-   *
-   * @param directory   The base directory
-   * @param packageName The package name for classes found inside the base directory
-   * @return The list of classes
-   * @throws ClassNotFoundException Exception occurred when there are no classes found in specified package path
-   */
-  default List<Class<?>> findClasses(final File directory, final String packageName)
-    throws ClassNotFoundException {
-    List<Class<?>> classes = new ArrayList<Class<?>>();
-    if (!directory.exists() || directory.getPath().toLowerCase().contains("test")) {
-      return classes;
-    }
-
-    File[] files = directory.listFiles();
-    for (File file : files) {
-      final String fqcn = packageName + "." + file.getName();
-
-      if (file.isDirectory()) {
-        classes.addAll(findClasses(file, fqcn)); // recursive search
-      } else if (file.getName().endsWith(CLASS_FILE_EXTENSION)) { // check class file
-        classes.add(Class.forName(fqcn.substring(0, fqcn.length() - CLASS_FILE_EXTENSION.length())));
-      }
-    }
     return classes;
   }
 
