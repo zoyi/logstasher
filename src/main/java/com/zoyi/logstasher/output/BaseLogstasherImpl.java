@@ -19,8 +19,10 @@ public abstract class BaseLogstasherImpl implements Logstasher {
    * @param message Something to print.
    */
   protected void printStdOut(String message) {
+    /*
     System.out.println(String.format("%s\t%s\t%s",
         LocalDateTime.now(), this.getClass().getSimpleName(), message));
+    */
 
     log.info(message);
   }
