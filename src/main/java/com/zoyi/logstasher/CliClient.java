@@ -5,37 +5,43 @@ import com.zoyi.logstasher.message.JsonMessage;
 import com.zoyi.logstasher.message.Message;
 import com.zoyi.logstasher.output.tcp.TcpConfiguration;
 import com.zoyi.logstasher.output.tcp.TcpLogstasherImpl;
+import com.zoyi.logstasher.util.ArgumentParser;
 import io.vertx.core.json.JsonObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.time.ZoneId;
+import java.util.Map;
 import java.util.Scanner;
-
-import static com.zoyi.logstasher.util.StringUtil.isNotNullOrEmpty;
 
 
 /**
- * Created by lloyd on 2017-04-06
+ * Simple CLI client for test purpose.
+ * This client takes some arguments as UNIX-like phrase.
+ *
+ * @author Junbong
+ * @version 1
+ * @since 0.1.4
  */
 public class CliClient {
   private static final Logger log = LogManager.getLogger(CliClient.class);
+  private static final String prompt = "Message> ";
 
 
   public static void main(String[] args) throws Exception {
     final Logstasher logstasher = new TcpLogstasherImpl();
 
-    final String host =
-        (args.length > 0 && isNotNullOrEmpty(args[0])) ? args[0] : "localhost";
-    final String port =
-        (args.length > 1 && isNotNullOrEmpty(args[1])) ? args[1] : "12340";
-    final String timezone =
-        (args.length > 2 && isNotNullOrEmpty(args[2])) ? args[2] : ZoneId.systemDefault().toString();
+    final Map<String, Object> arguments = ArgumentParser.parse(args);
+
+    final String host = (String) arguments.getOrDefault("host", "localhost");
+    final Integer port = (Integer) arguments.getOrDefault("port", 12340);
+    final String timezone = (String) arguments.getOrDefault("timezone", ZoneId.systemDefault().toString());
+    final Integer pushInterval = (Integer) arguments.getOrDefault("pushInterval", 2000);
 
     final Configuration configuration =
         new TcpConfiguration().setHost(host)
-                              .setPort(Integer.parseInt(port))
-                              .setPushInterval(1000)
+                              .setPort(port)
+                              .setPushInterval(pushInterval)
                               .setTimezone(timezone);
 
     // localhost:12340
@@ -43,6 +49,9 @@ public class CliClient {
 
     final Scanner scanner = new Scanner(System.in);
     String line;
+
+    System.out.println("Logstasher CLI Client");
+    System.out.print(prompt);
 
     ReadLine:
     while ((line=scanner.nextLine()) != null) {
@@ -80,6 +89,8 @@ public class CliClient {
           }
         }
       }
+
+      System.out.print(prompt);
     }
   }
 }

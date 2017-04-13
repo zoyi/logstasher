@@ -251,7 +251,7 @@ public class TcpLogstasherImpl extends BaseLogstasherImpl {
 
         // Flush messages
         try {
-          printStdOut("Queue isExceeded: " + queue.isExceeded());
+          printStdOut("Queue is exceeded?: " + queue.isExceeded());
 
           if (queue.isExceeded() ||
               lastPushedTimestamp != null &&
@@ -301,7 +301,7 @@ public class TcpLogstasherImpl extends BaseLogstasherImpl {
 
       lastPushedTimestamp = Instant.now();
 
-      printStdOut("Pushed");
+      printStdOut("All messages in queue has been pushed.");
 
     } else {
       // TODO: Create pushExceptionCallback

@@ -1,8 +1,11 @@
 apply plugin: 'java'
+apply plugin: 'application'
 
 
 group 'com.zoyi.logstasher'
-version '0.1.0'
+version '0.1.4'
+
+mainClassName = "com.zoyi.logstasher.CliClient"
 
 
 repositories {

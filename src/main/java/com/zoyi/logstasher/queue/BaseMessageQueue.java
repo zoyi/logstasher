@@ -46,7 +46,7 @@ public class BaseMessageQueue implements MessageQueue {
           instance = new BaseMessageQueue((int)(capacity * 1.1), (int)(size * 1.1));
 
           //#
-          instance.log.debug("Queue created: " + instance.toString());
+          instance.log.info("Queue created: " + instance.toString());
         }
       }
     }
@@ -112,7 +112,7 @@ public class BaseMessageQueue implements MessageQueue {
     }
 
     //#
-    log.debug(this.toString());
+    log.info(this.toString());
   }
 
 
