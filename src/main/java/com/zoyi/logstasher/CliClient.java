@@ -5,22 +5,38 @@ import com.zoyi.logstasher.message.JsonMessage;
 import com.zoyi.logstasher.message.Message;
 import com.zoyi.logstasher.output.tcp.TcpConfiguration;
 import com.zoyi.logstasher.output.tcp.TcpLogstasherImpl;
+import io.vertx.core.json.JsonObject;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+import java.time.ZoneId;
 import java.util.Scanner;
+
+import static com.zoyi.logstasher.util.StringUtil.isNotNullOrEmpty;
 
 
 /**
  * Created by lloyd on 2017-04-06
  */
-public class CliTest {
+public class CliClient {
+  private static final Logger log = LogManager.getLogger(CliClient.class);
+
+
   public static void main(String[] args) throws Exception {
     final Logstasher logstasher = new TcpLogstasherImpl();
 
+    final String host =
+        (args.length > 0 && isNotNullOrEmpty(args[0])) ? args[0] : "localhost";
+    final String port =
+        (args.length > 1 && isNotNullOrEmpty(args[1])) ? args[1] : "12340";
+    final String timezone =
+        (args.length > 2 && isNotNullOrEmpty(args[2])) ? args[2] : ZoneId.systemDefault().toString();
+
     final Configuration configuration =
-        new TcpConfiguration().setHost("localhost")
-                              .setPort(12340)
+        new TcpConfiguration().setHost(host)
+                              .setPort(Integer.parseInt(port))
                               .setPushInterval(1000)
-                              .setTimezone("UTC");
+                              .setTimezone(timezone);
 
     // localhost:12340
     logstasher.initialize(configuration);
@@ -48,23 +64,18 @@ public class CliTest {
           }
 
           default: {
-            final Message data = new JsonMessage();
-            data.put("@defaultMessage", "Default Message Provided!");
-
             try {
-              final String[] tokens = line.split(",\\s*");
-              for (String t : tokens) {
-                final String[] tk = t.split(":");
-                data.put(tk[0], tk[1]);
+              final JsonObject jsonInput = new JsonObject(line);
+              final Message data = new JsonMessage(jsonInput);
+
+              try {
+                logstasher.put(data);
+              } catch (Exception e) {
+                log.error("Log putting error");
               }
-            } catch (Exception e) {
-              e.printStackTrace();
-            }
 
-            try {
-              logstasher.put(data);
             } catch (Exception e) {
-              e.printStackTrace();
+              log.error("Input parsing error", e);
             }
           }
         }

@@ -22,7 +22,17 @@ public class JsonMessage implements Message<byte[]> {
 
 
   public JsonMessage() {
-    this(null);
+    this((Map<String, Object>) null);
+  }
+
+
+  public JsonMessage(String json) {
+    this(new JsonObject(json));
+  }
+
+
+  public JsonMessage(JsonObject json) {
+    this(json.getMap());
   }
 
 
