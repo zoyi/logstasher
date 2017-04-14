@@ -12,6 +12,9 @@ _Note_: This project is under highly development :]
 * Light-weight
 * Easy-to-use
 
+## Requirements
+* Supports **Java8** or higher
+
 ## Download
 ### Via Gradle
 ```gradle
@@ -76,7 +79,7 @@ logMessage.setTimestamp(Instant.now());
 logMessage.setTimestamp(LocalDateTime.now());
 ```
 
-## Data Types
+### Data Types
 ```java
 // Any types are permitted
 Map<String, Object> logData = new HashMap<>();
@@ -87,7 +90,7 @@ logData.put("exhausted", false);
 logData.put("popularity", Integer.MAX_VALUE);
 ```
 
-## Configuration
+### Configuration
 ```java
 Configuration configuration = new ConfigurationImpl();
 configuration.set("connectionTimeout", 5000);
@@ -99,6 +102,34 @@ configuration.set("maxTraverses", 20);
 
 Logstasher logstasher = Logstashers.create("tcp", configuration);
 ```
+
+## CLI Client
+This library contains executable CLI client.
+
+### Build Client
+```sh
+$ gradle assembleDist
+```
+Then following distributions generated:
+```
+build
+├── classes
+│   ├── main
+│   ...
+├── distributions
+│   ├── logstasher-VERSION.tar
+│   └── logstasher-VERSION.zip
+...
+```
+Unzip distribution and execute:
+```sh
+$ cd logstasher-VERSION
+$ ./bin/logstasher --host=localhost --port=12340 --timezone=UTC
+```
+Following options available:
+* `--host`: Host to connect. Default is `localhost`.
+* `--port`: Port of host. Default is `12340`.
+* `--timezone`: Timezone of `@timestamp` field. Default is _system_default_ value.
 
 ## Lisence
 This project is under MIT lisence.
